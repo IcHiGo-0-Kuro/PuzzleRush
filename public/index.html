@@ -1,0 +1,5110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>PuzzleMaster</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+>
+
+<style>
+
+/* =========================================================
+   ROOT
+========================================================= */
+
+:root {
+    --bg: #070b18;
+    --bg2: #111936;
+    --panel: rgba(17, 25, 54, .82);
+    --panel2: rgba(255,255,255,.055);
+    --border: rgba(255,255,255,.11);
+
+    --text: #f8fafc;
+    --muted: #94a3b8;
+
+    --primary: #6366f1;
+    --primary2: #8b5cf6;
+
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+
+    --shadow: 0 25px 70px rgba(0,0,0,.4);
+}
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+
+    font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    min-height: 100vh;
+
+    color: var(--text);
+
+    background:
+        radial-gradient(
+            circle at 10% 10%,
+            rgba(99,102,241,.22),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 90% 90%,
+            rgba(139,92,246,.15),
+            transparent 30%
+        ),
+        linear-gradient(
+            135deg,
+            var(--bg),
+            var(--bg2)
+        );
+
+    overflow-x: hidden;
+}
+
+button,
+input {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+.hidden {
+    display: none !important;
+}
+
+
+/* =========================================================
+   TOP BAR
+========================================================= */
+
+.topbar {
+    width: 100%;
+
+    padding: 18px 30px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    border-bottom: 1px solid var(--border);
+
+    background: rgba(7,11,24,.65);
+
+    backdrop-filter: blur(18px);
+
+    position: sticky;
+    top: 0;
+
+    z-index: 20;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    font-size: 1.15rem;
+    font-weight: 800;
+}
+
+.brand-icon {
+    width: 36px;
+    height: 36px;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 10px;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--primary),
+            var(--primary2)
+        );
+
+    box-shadow:
+        0 8px 25px rgba(99,102,241,.35);
+}
+
+.top-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.icon-btn {
+    width: 40px;
+    height: 40px;
+
+    border-radius: 12px;
+
+    border: 1px solid var(--border);
+
+    color: white;
+
+    background: var(--panel2);
+}
+
+.icon-btn:hover {
+    background: rgba(255,255,255,.1);
+}
+
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+.page {
+    width: min(1100px, calc(100% - 30px));
+
+    margin: 35px auto;
+}
+
+.screen {
+    display: none;
+}
+
+.screen.active {
+    display: block;
+}
+
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.hero {
+    text-align: center;
+
+    margin-bottom: 35px;
+}
+
+.hero h1 {
+    font-size: clamp(2.4rem, 6vw, 4.5rem);
+
+    font-weight: 800;
+
+    letter-spacing: -2px;
+
+    background:
+        linear-gradient(
+            100deg,
+            #fff,
+            #c4b5fd,
+            #818cf8
+        );
+
+    background-clip: text;
+    -webkit-background-clip: text;
+
+    -webkit-text-fill-color: transparent;
+}
+
+.hero p {
+    max-width: 650px;
+
+    margin: 12px auto 0;
+
+    color: var(--muted);
+
+    line-height: 1.7;
+}
+
+
+/* =========================================================
+   SETUP
+========================================================= */
+
+.setup-grid {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 22px;
+}
+
+.card {
+    background: var(--panel);
+
+    border: 1px solid var(--border);
+
+    border-radius: 24px;
+
+    padding: 25px;
+
+    box-shadow: var(--shadow);
+
+    backdrop-filter: blur(18px);
+}
+
+.card-title {
+    font-size: 1.05rem;
+
+    font-weight: 800;
+
+    margin-bottom: 18px;
+}
+
+.input-label {
+    display: block;
+
+    color: var(--muted);
+
+    font-size: .78rem;
+
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: .7px;
+
+    margin-bottom: 8px;
+}
+
+.text-input {
+    width: 100%;
+
+    padding: 14px 16px;
+
+    color: white;
+
+    background: rgba(0,0,0,.22);
+
+    border: 1px solid var(--border);
+
+    border-radius: 13px;
+
+    outline: none;
+
+    margin-bottom: 20px;
+}
+
+.text-input:focus {
+    border-color: var(--primary);
+
+    box-shadow:
+        0 0 0 3px
+        rgba(99,102,241,.18);
+}
+
+.text-input.invalid {
+    border-color: var(--danger);
+
+    box-shadow:
+        0 0 0 3px
+        rgba(239,68,68,.12);
+}
+
+
+/* =========================================================
+   MOVES INPUT
+========================================================= */
+
+.moves-input-wrap {
+    position: relative;
+}
+
+.moves-input-wrap .text-input {
+    padding-right: 70px;
+}
+
+.moves-suffix {
+    position: absolute;
+
+    right: 14px;
+    top: 14px;
+
+    color: var(--muted);
+
+    font-size: .75rem;
+
+    pointer-events: none;
+}
+
+.field-error {
+    min-height: 18px;
+
+    margin-top: -14px;
+    margin-bottom: 10px;
+
+    color: #fca5a5;
+
+    font-size: .7rem;
+}
+
+
+/* =========================================================
+   DIFFICULTY
+========================================================= */
+
+.difficulty-grid {
+    display: grid;
+
+    grid-template-columns: repeat(2,1fr);
+
+    gap: 10px;
+}
+
+.difficulty {
+    padding: 15px;
+
+    border: 1px solid var(--border);
+
+    background: var(--panel2);
+
+    border-radius: 15px;
+
+    color: white;
+
+    text-align: left;
+
+    transition: .2s;
+}
+
+.difficulty:hover {
+    transform: translateY(-2px);
+
+    border-color:
+        rgba(255,255,255,.25);
+}
+
+.difficulty.selected {
+    border-color: var(--primary);
+
+    background:
+        rgba(99,102,241,.16);
+
+    box-shadow:
+        0 0 0 2px
+        rgba(99,102,241,.12);
+}
+
+.difficulty strong {
+    display: block;
+
+    margin-bottom: 5px;
+}
+
+.difficulty small {
+    color: var(--muted);
+
+    font-size: .7rem;
+}
+
+.easy {
+    color: #34d399;
+}
+
+.normal {
+    color: #60a5fa;
+}
+
+.hard {
+    color: #fbbf24;
+}
+
+.expert {
+    color: #f87171;
+}
+
+
+/* =========================================================
+   IMAGE
+========================================================= */
+
+.upload-box {
+    border:
+        1px dashed
+        rgba(255,255,255,.2);
+
+    border-radius: 18px;
+
+    padding: 25px;
+
+    text-align: center;
+
+    background: rgba(0,0,0,.12);
+}
+
+.upload-icon {
+    font-size: 2.5rem;
+
+    margin-bottom: 8px;
+}
+
+.upload-box p {
+    color: var(--muted);
+
+    font-size: .82rem;
+
+    margin-bottom: 15px;
+}
+
+.preview {
+    width: 100%;
+
+    height: 180px;
+
+    object-fit: cover;
+
+    border-radius: 15px;
+
+    margin-top: 15px;
+
+    display: none;
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.btn {
+    border: 0;
+
+    border-radius: 13px;
+
+    padding: 13px 18px;
+
+    color: white;
+
+    font-weight: 700;
+
+    transition: .2s;
+}
+
+.btn-primary {
+    width: 100%;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--primary),
+            var(--primary2)
+        );
+
+    box-shadow:
+        0 10px 25px
+        rgba(99,102,241,.28);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 14px 30px
+        rgba(99,102,241,.4);
+}
+
+.btn-secondary {
+    background: var(--panel2);
+
+    border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+    background: rgba(255,255,255,.1);
+}
+
+.btn-success {
+    background: var(--success);
+}
+
+.btn-danger {
+    background:
+        rgba(239,68,68,.15);
+
+    color: #fca5a5;
+
+    border:
+        1px solid
+        rgba(239,68,68,.2);
+}
+
+.btn:disabled {
+    opacity: .5;
+
+    cursor: not-allowed;
+
+    transform: none !important;
+}
+
+.button-row {
+    display: flex;
+
+    gap: 10px;
+
+    margin-top: 15px;
+}
+
+.button-row .btn {
+    flex: 1;
+}
+
+
+/* =========================================================
+   DEVICE STATUS
+========================================================= */
+
+.device-status {
+    margin-top: 14px;
+
+    padding: 10px 12px;
+
+    border-radius: 12px;
+
+    background: rgba(16,185,129,.08);
+
+    border:
+        1px solid
+        rgba(16,185,129,.16);
+
+    color: #86efac;
+
+    font-size: .68rem;
+
+    text-align: center;
+}
+
+.device-status.loading {
+    color: #c4b5fd;
+
+    background:
+        rgba(99,102,241,.08);
+
+    border-color:
+        rgba(99,102,241,.16);
+}
+
+.device-status.error {
+    color: #fca5a5;
+
+    background:
+        rgba(239,68,68,.08);
+
+    border-color:
+        rgba(239,68,68,.16);
+}
+
+
+/* =========================================================
+   GAME HEADER
+========================================================= */
+
+.game-header {
+    text-align: center;
+
+    margin-bottom: 20px;
+}
+
+.player-pill {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    padding: 7px 13px;
+
+    border-radius: 999px;
+
+    background:
+        rgba(99,102,241,.14);
+
+    color: #c4b5fd;
+
+    font-size: .72rem;
+
+    font-weight: 700;
+}
+
+.game-header h2 {
+    font-size:
+        clamp(1.8rem,4vw,2.8rem);
+
+    margin: 12px 0 6px;
+}
+
+.game-header p {
+    color: var(--muted);
+
+    font-size: .85rem;
+}
+
+
+/* =========================================================
+   STATS
+========================================================= */
+
+.stats {
+    display: grid;
+
+    grid-template-columns:
+        repeat(5,1fr);
+
+    gap: 10px;
+
+    max-width: 850px;
+
+    margin: 0 auto 18px;
+}
+
+.stat {
+    text-align: center;
+
+    padding: 13px 8px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 14px;
+
+    background: var(--panel);
+}
+
+.stat span {
+    display: block;
+
+    color: var(--muted);
+
+    font-size: .65rem;
+
+    text-transform: uppercase;
+
+    font-weight: 700;
+}
+
+.stat strong {
+    display: block;
+
+    margin-top: 4px;
+
+    font-size: 1.05rem;
+}
+
+
+/* =========================================================
+   PROGRESS
+========================================================= */
+
+.progress-wrap {
+    max-width: 650px;
+
+    margin: 0 auto 20px;
+}
+
+.progress-label {
+    display: flex;
+
+    justify-content: space-between;
+
+    font-size: .7rem;
+
+    color: var(--muted);
+
+    margin-bottom: 6px;
+}
+
+.progress {
+    height: 7px;
+
+    background:
+        rgba(255,255,255,.08);
+
+    border-radius: 999px;
+
+    overflow: hidden;
+}
+
+.progress-bar {
+    width: 0;
+
+    height: 100%;
+
+    background:
+        linear-gradient(
+            90deg,
+            var(--primary),
+            #a78bfa
+        );
+
+    transition: width .25s;
+}
+
+
+/* =========================================================
+   PUZZLE
+========================================================= */
+
+.board-wrapper {
+    display: flex;
+
+    justify-content: center;
+
+    margin: 20px 0;
+}
+
+#puzzle {
+    --board-size: 420px;
+
+    width: var(--board-size);
+
+    height: var(--board-size);
+
+    display: grid;
+
+    gap: 3px;
+
+    background: #020617;
+
+    border:
+        3px solid
+        rgba(255,255,255,.1);
+
+    border-radius: 18px;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 25px 60px rgba(0,0,0,.5),
+        0 0 40px rgba(99,102,241,.12);
+}
+
+.tile {
+    position: relative;
+
+    background-repeat: no-repeat;
+
+    cursor: pointer;
+
+    transition:
+        filter .15s,
+        transform .12s,
+        box-shadow .2s;
+}
+
+.tile:hover {
+    filter: brightness(1.13);
+
+    z-index: 2;
+}
+
+.tile.empty {
+    background: #020617 !important;
+
+    cursor: default;
+}
+
+.tile.hint {
+    animation:
+        hintPulse .8s infinite alternate;
+
+    box-shadow:
+        inset 0 0 0 4px #fbbf24,
+        0 0 20px #fbbf24;
+
+    z-index: 5;
+}
+
+@keyframes hintPulse {
+    from {
+        filter: brightness(1);
+    }
+
+    to {
+        filter: brightness(1.7);
+    }
+}
+
+
+/* =========================================================
+   CONTROLS
+========================================================= */
+
+.controls {
+    display: flex;
+
+    justify-content: center;
+
+    flex-wrap: wrap;
+
+    gap: 9px;
+
+    margin: 20px auto;
+}
+
+.controls .btn {
+    min-width: 100px;
+}
+
+
+/* =========================================================
+   STREAK
+========================================================= */
+
+.streak {
+    text-align: center;
+
+    color: #fbbf24;
+
+    font-size: .8rem;
+
+    font-weight: 800;
+
+    min-height: 22px;
+}
+
+
+/* =========================================================
+   ACHIEVEMENTS
+========================================================= */
+
+.achievement-panel {
+    max-width: 850px;
+
+    margin: 25px auto;
+}
+
+.achievement-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4,1fr);
+
+    gap: 10px;
+}
+
+.achievement {
+    padding: 15px 8px;
+
+    text-align: center;
+
+    border-radius: 14px;
+
+    border: 1px solid var(--border);
+
+    background: var(--panel2);
+
+    opacity: .35;
+
+    filter: grayscale(1);
+
+    transition: .3s;
+}
+
+.achievement.unlocked {
+    opacity: 1;
+
+    filter: none;
+
+    background:
+        rgba(99,102,241,.1);
+
+    border-color:
+        rgba(99,102,241,.35);
+}
+
+.achievement-icon {
+    font-size: 1.6rem;
+
+    margin-bottom: 5px;
+}
+
+.achievement strong {
+    display: block;
+
+    font-size: .7rem;
+}
+
+.achievement small {
+    color: var(--muted);
+
+    font-size: .58rem;
+}
+
+
+/* =========================================================
+   LEADERBOARD
+========================================================= */
+
+.leaderboard {
+    max-width: 850px;
+
+    margin: 25px auto;
+}
+
+.score-row {
+    display: grid;
+
+    grid-template-columns:
+        45px 1fr 100px 90px;
+
+    gap: 10px;
+
+    align-items: center;
+
+    padding: 11px;
+
+    border-bottom:
+        1px solid var(--border);
+
+    font-size: .75rem;
+}
+
+.score-row:last-child {
+    border-bottom: 0;
+}
+
+.rank {
+    font-weight: 800;
+
+    color: #fbbf24;
+}
+
+.score-name {
+    font-weight: 700;
+}
+
+.score-meta {
+    color: var(--muted);
+
+    text-align: right;
+}
+
+
+/* =========================================================
+   PAUSE
+========================================================= */
+
+.pause-overlay {
+    position: fixed;
+
+    inset: 0;
+
+    background:
+        rgba(2,6,23,.82);
+
+    backdrop-filter: blur(10px);
+
+    z-index: 50;
+
+    display: none;
+
+    place-items: center;
+
+    text-align: center;
+}
+
+.pause-overlay.show {
+    display: grid;
+}
+
+.pause-card {
+    width: min(400px,90%);
+
+    padding: 35px;
+
+    background: #111936;
+
+    border: 1px solid var(--border);
+
+    border-radius: 25px;
+
+    box-shadow: var(--shadow);
+}
+
+.pause-card h2 {
+    font-size: 2rem;
+
+    margin-bottom: 8px;
+}
+
+.pause-card p {
+    color: var(--muted);
+
+    margin-bottom: 20px;
+}
+
+
+/* =========================================================
+   VICTORY / FAILURE
+========================================================= */
+
+.victory-overlay {
+    position: fixed;
+
+    inset: 0;
+
+    background:
+        rgba(2,6,23,.72);
+
+    backdrop-filter: blur(12px);
+
+    z-index: 60;
+
+    display: none;
+
+    place-items: center;
+}
+
+.victory-overlay.show {
+    display: grid;
+}
+
+.victory-card {
+    width: min(480px,92%);
+
+    padding: 35px;
+
+    text-align: center;
+
+    border-radius: 28px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #151d46,
+            #0c122b
+        );
+
+    border:
+        1px solid
+        rgba(255,255,255,.15);
+
+    box-shadow:
+        0 30px 100px
+        rgba(0,0,0,.6);
+
+    animation:
+        victoryPop .45s ease;
+}
+
+.victory-icon {
+    font-size: 4rem;
+}
+
+.victory-card h2 {
+    font-size: 2rem;
+
+    margin: 10px 0;
+}
+
+.victory-card p {
+    color: var(--muted);
+
+    margin-bottom: 20px;
+}
+
+.victory-stats {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3,1fr);
+
+    gap: 8px;
+
+    margin-bottom: 20px;
+}
+
+.victory-stat {
+    padding: 12px;
+
+    border-radius: 13px;
+
+    background:
+        rgba(255,255,255,.05);
+}
+
+.victory-stat small {
+    display: block;
+
+    color: var(--muted);
+
+    font-size: .6rem;
+}
+
+.victory-stat strong {
+    font-size: 1rem;
+}
+
+.failure-title {
+    color: #fca5a5;
+}
+
+@keyframes victoryPop {
+
+    from {
+        transform: scale(.7);
+
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+
+        opacity: 1;
+    }
+}
+
+
+/* =========================================================
+   CONFETTI
+========================================================= */
+
+.confetti {
+    position: fixed;
+
+    top: -20px;
+
+    width: 9px;
+
+    height: 15px;
+
+    z-index: 100;
+
+    pointer-events: none;
+
+    animation:
+        confettiFall
+        linear
+        forwards;
+}
+
+@keyframes confettiFall {
+
+    to {
+        transform:
+            translate3d(
+                var(--x),
+                110vh,
+                0
+            )
+            rotate(720deg);
+
+        opacity: 0;
+    }
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+.toast {
+    position: fixed;
+
+    left: 50%;
+
+    bottom: 25px;
+
+    transform:
+        translate(-50%,100px);
+
+    background: #111936;
+
+    border:
+        1px solid var(--border);
+
+    color: white;
+
+    padding: 13px 18px;
+
+    border-radius: 13px;
+
+    box-shadow: var(--shadow);
+
+    z-index: 200;
+
+    opacity: 0;
+
+    transition: .3s;
+
+    font-size: .8rem;
+
+    max-width: 90%;
+
+    text-align: center;
+}
+
+.toast.show {
+    transform:
+        translate(-50%,0);
+
+    opacity: 1;
+}
+
+
+/* =========================================================
+   LIGHT THEME
+========================================================= */
+
+body.light {
+
+    --bg: #eef2ff;
+
+    --bg2: #e0e7ff;
+
+    --panel:
+        rgba(255,255,255,.82);
+
+    --panel2:
+        rgba(15,23,42,.05);
+
+    --border:
+        rgba(15,23,42,.1);
+
+    --text: #111827;
+
+    --muted: #64748b;
+}
+
+body.light .topbar {
+    background:
+        rgba(255,255,255,.75);
+}
+
+body.light .text-input {
+    color: #111827;
+
+    background:
+        rgba(255,255,255,.6);
+}
+
+body.light .pause-card,
+body.light .victory-card {
+    background: white;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 800px) {
+
+    .setup-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats {
+        grid-template-columns:
+            repeat(3,1fr);
+    }
+
+    .stat:nth-child(4),
+    .stat:nth-child(5) {
+        display: none;
+    }
+
+    .achievement-grid {
+        grid-template-columns:
+            repeat(2,1fr);
+    }
+}
+
+@media (max-width: 500px) {
+
+    .topbar {
+        padding: 13px 15px;
+    }
+
+    .page {
+        width:
+            calc(100% - 18px);
+
+        margin:
+            20px auto;
+    }
+
+    .card {
+        padding: 18px;
+
+        border-radius: 19px;
+    }
+
+    .hero {
+        margin-bottom: 22px;
+    }
+
+    .difficulty-grid {
+        grid-template-columns:
+            1fr 1fr;
+    }
+
+    #puzzle {
+        --board-size:
+            min(92vw,400px);
+
+        border-radius: 12px;
+    }
+
+    .controls .btn {
+        min-width: 85px;
+
+        padding: 10px;
+
+        font-size: .75rem;
+    }
+
+    .victory-card {
+        padding:
+            25px 18px;
+    }
+}
+
+</style>
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     TOP BAR
+========================================================= -->
+
+<header class="topbar">
+
+    <div class="brand">
+
+        <div class="brand-icon">
+            🧩
+        </div>
+
+        PuzzleMaster
+
+    </div>
+
+    <div class="top-actions">
+
+        <button
+            class="icon-btn"
+            id="soundBtn"
+            title="Sound"
+            type="button"
+        >
+            🔊
+        </button>
+
+        <button
+            class="icon-btn"
+            id="themeBtn"
+            title="Theme"
+            type="button"
+        >
+            🌙
+        </button>
+
+    </div>
+
+</header>
+
+
+
+<main class="page">
+
+
+<!-- =========================================================
+     SETUP SCREEN
+========================================================= -->
+
+<section
+    id="setupScreen"
+    class="screen active"
+>
+
+    <div class="hero">
+
+        <h1>
+            PuzzleMaster
+        </h1>
+
+        <p>
+            Your photo. Your challenge.
+            Your rules. Set your difficulty,
+            choose your maximum moves and
+            prove that you are the ultimate
+            PuzzleMaster.
+        </p>
+
+    </div>
+
+
+    <div class="setup-grid">
+
+
+        <!-- =================================================
+             PLAYER / GAME SETTINGS
+        ================================================= -->
+
+        <div class="card">
+
+            <div class="card-title">
+                🎮 Create Your Challenge
+            </div>
+
+
+            <!-- PLAYER NAME -->
+
+            <label
+                class="input-label"
+                for="playerName"
+            >
+                Player Name *
+            </label>
+
+            <input
+                id="playerName"
+                class="text-input"
+                type="text"
+                maxlength="25"
+                placeholder="Enter your name..."
+                autocomplete="name"
+            >
+
+            <div
+                id="nameError"
+                class="field-error"
+            ></div>
+
+
+            <!-- MAX MOVES -->
+
+            <label
+                class="input-label"
+                for="maxMoves"
+            >
+                Maximum Moves *
+            </label>
+
+            <div class="moves-input-wrap">
+
+                <input
+                    id="maxMoves"
+                    class="text-input"
+                    type="number"
+                    min="1"
+                    step="1"
+                    inputmode="numeric"
+                    placeholder="Example: 100"
+                >
+
+                <span class="moves-suffix">
+                    MOVES
+                </span>
+
+            </div>
+
+            <div
+                id="movesError"
+                class="field-error"
+            ></div>
+
+
+            <!-- DIFFICULTY -->
+
+            <label class="input-label">
+                Difficulty
+            </label>
+
+            <div class="difficulty-grid">
+
+
+                <button
+                    class="difficulty selected"
+                    data-level="easy"
+                    type="button"
+                >
+
+                    <strong class="easy">
+                        🟢 Easy
+                    </strong>
+
+                    <small>
+                        3 × 3 · Relaxed
+                    </small>
+
+                </button>
+
+
+                <button
+                    class="difficulty"
+                    data-level="normal"
+                    type="button"
+                >
+
+                    <strong class="normal">
+                        🔵 Normal
+                    </strong>
+
+                    <small>
+                        4 × 4 · Balanced
+                    </small>
+
+                </button>
+
+
+                <button
+                    class="difficulty"
+                    data-level="hard"
+                    type="button"
+                >
+
+                    <strong class="hard">
+                        🟠 Hard
+                    </strong>
+
+                    <small>
+                        5 × 5 · Challenging
+                    </small>
+
+                </button>
+
+
+                <button
+                    class="difficulty"
+                    data-level="expert"
+                    type="button"
+                >
+
+                    <strong class="expert">
+                        🔴 Expert
+                    </strong>
+
+                    <small>
+                        6 × 6 · Extreme
+                    </small>
+
+                </button>
+
+            </div>
+
+
+            <div class="button-row">
+
+                <button
+                    class="btn btn-secondary"
+                    id="randomChallengeBtn"
+                    type="button"
+                >
+                    🎲 Random Challenge
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             IMAGE
+        ================================================= -->
+
+        <div class="card">
+
+            <div class="card-title">
+                🖼️ Choose Your Image
+            </div>
+
+
+            <div class="upload-box">
+
+                <div class="upload-icon">
+                    📸
+                </div>
+
+                <p>
+                    Choose any photo from your device.
+                    Your photo will be sent securely
+                    to your backend and stored in
+                    your Supabase Storage bucket.
+                </p>
+
+
+                <input
+                    id="imageInput"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    hidden
+                >
+
+
+                <button
+                    class="btn btn-secondary"
+                    id="chooseImageBtn"
+                    type="button"
+                >
+                    Choose Image
+                </button>
+
+
+                <img
+                    id="imagePreview"
+                    class="preview"
+                    alt="Selected image preview"
+                >
+
+            </div>
+
+
+            <button
+                id="startBtn"
+                class="btn btn-primary"
+                style="margin-top:18px"
+                type="button"
+            >
+                🚀 Start Puzzle
+            </button>
+
+
+            <div
+                id="deviceStatus"
+                class="device-status loading"
+            >
+                🔄 Connecting to PuzzleMaster...
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         ACHIEVEMENTS
+    ===================================================== -->
+
+    <div class="card achievement-panel">
+
+        <div class="card-title">
+            🏆 Achievements
+        </div>
+
+
+        <div class="achievement-grid">
+
+
+            <div
+                class="achievement"
+                id="achievementFirst"
+            >
+
+                <div class="achievement-icon">
+                    🎯
+                </div>
+
+                <strong>
+                    First Solve
+                </strong>
+
+                <small>
+                    Complete a puzzle
+                </small>
+
+            </div>
+
+
+            <div
+                class="achievement"
+                id="achievementSpeed"
+            >
+
+                <div class="achievement-icon">
+                    ⚡
+                </div>
+
+                <strong>
+                    Speed Demon
+                </strong>
+
+                <small>
+                    Finish under 60s
+                </small>
+
+            </div>
+
+
+            <div
+                class="achievement"
+                id="achievementExpert"
+            >
+
+                <div class="achievement-icon">
+                    👑
+                </div>
+
+                <strong>
+                    Puzzle Master
+                </strong>
+
+                <small>
+                    Beat Expert
+                </small>
+
+            </div>
+
+
+            <div
+                class="achievement"
+                id="achievementTen"
+            >
+
+                <div class="achievement-icon">
+                    🔥
+                </div>
+
+                <strong>
+                    Dedicated
+                </strong>
+
+                <small>
+                    Solve 10 puzzles
+                </small>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         LEADERBOARD
+    ===================================================== -->
+
+    <div class="card leaderboard">
+
+        <div class="card-title">
+            🥇 Personal Leaderboard
+        </div>
+
+        <div id="leaderboardList"></div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     GAME SCREEN
+========================================================= -->
+
+<section
+    id="gameScreen"
+    class="screen"
+>
+
+    <div class="game-header">
+
+        <div class="player-pill">
+            ●
+            <span id="gamePlayer">
+                PLAYER
+            </span>
+        </div>
+
+
+        <h2 id="gameTitle">
+            Easy Challenge
+        </h2>
+
+
+        <p id="gameDescription">
+            Reconstruct the image.
+        </p>
+
+    </div>
+
+
+
+    <!-- STATS -->
+
+    <div class="stats">
+
+
+        <div class="stat">
+
+            <span>
+                Moves
+            </span>
+
+            <strong id="moves">
+                0 / 0
+            </strong>
+
+        </div>
+
+
+        <div class="stat">
+
+            <span>
+                Time
+            </span>
+
+            <strong id="time">
+                00:00
+            </strong>
+
+        </div>
+
+
+        <div class="stat">
+
+            <span>
+                Best
+            </span>
+
+            <strong id="best">
+                --
+            </strong>
+
+        </div>
+
+
+        <div class="stat">
+
+            <span>
+                Hints
+            </span>
+
+            <strong id="hints">
+                3
+            </strong>
+
+        </div>
+
+
+        <div class="stat">
+
+            <span>
+                Score
+            </span>
+
+            <strong id="score">
+                0
+            </strong>
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- PROGRESS -->
+
+    <div class="progress-wrap">
+
+        <div class="progress-label">
+
+            <span>
+                Puzzle Progress
+            </span>
+
+            <span id="progressText">
+                0%
+            </span>
+
+        </div>
+
+
+        <div class="progress">
+
+            <div
+                id="progressBar"
+                class="progress-bar"
+            ></div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- STREAK -->
+
+    <div
+        class="streak"
+        id="streak"
+    >
+        🔥 Streak: 0
+    </div>
+
+
+
+    <!-- PUZZLE -->
+
+    <div class="board-wrapper">
+
+        <div id="puzzle"></div>
+
+    </div>
+
+
+
+    <!-- CONTROLS -->
+
+    <div class="controls">
+
+
+        <button
+            class="btn btn-secondary"
+            id="hintBtn"
+            type="button"
+        >
+            💡 Hint
+        </button>
+
+
+        <button
+            class="btn btn-secondary"
+            id="pauseBtn"
+            type="button"
+        >
+            ⏸ Pause
+        </button>
+
+
+        <button
+            class="btn btn-secondary"
+            id="restartGameBtn"
+            type="button"
+        >
+            🔀 Restart
+        </button>
+
+
+        <button
+            class="btn btn-danger"
+            id="quitBtn"
+            type="button"
+        >
+            ✕ Quit
+        </button>
+
+
+    </div>
+
+</section>
+
+</main>
+
+
+
+<!-- =========================================================
+     PAUSE OVERLAY
+========================================================= -->
+
+<div
+    id="pauseOverlay"
+    class="pause-overlay"
+>
+
+    <div class="pause-card">
+
+        <div style="font-size:3rem">
+            ⏸️
+        </div>
+
+        <h2>
+            Game Paused
+        </h2>
+
+        <p>
+            Take a break. Your timer has stopped.
+        </p>
+
+        <button
+            class="btn btn-primary"
+            id="resumeBtn"
+            type="button"
+        >
+            ▶ Resume Game
+        </button>
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     VICTORY / FAILURE OVERLAY
+========================================================= -->
+
+<div
+    id="victoryOverlay"
+    class="victory-overlay"
+>
+
+    <div class="victory-card">
+
+        <div
+            class="victory-icon"
+            id="resultIcon"
+        >
+            🏆
+        </div>
+
+
+        <h2 id="resultTitle">
+            Grid Synchronized!
+        </h2>
+
+
+        <p id="victoryMessage">
+            Amazing work!
+        </p>
+
+
+        <div class="victory-stats">
+
+
+            <div class="victory-stat">
+
+                <small>
+                    TIME
+                </small>
+
+                <strong id="finalTime">
+                    00:00
+                </strong>
+
+            </div>
+
+
+            <div class="victory-stat">
+
+                <small>
+                    MOVES
+                </small>
+
+                <strong id="finalMoves">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="victory-stat">
+
+                <small>
+                    SCORE
+                </small>
+
+                <strong id="finalScore">
+                    0
+                </strong>
+
+            </div>
+
+
+        </div>
+
+
+        <div class="button-row">
+
+
+            <button
+                class="btn btn-primary"
+                id="playAgainBtn"
+                type="button"
+            >
+                🔥 Play Again
+            </button>
+
+
+            <button
+                class="btn btn-secondary"
+                id="menuBtn"
+                type="button"
+            >
+                🏠 Menu
+            </button>
+
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     TOAST
+========================================================= -->
+
+<div
+    id="toast"
+    class="toast"
+></div>
+
+
+
+<script>
+
+"use strict";
+
+
+/* =========================================================
+   CONFIGURATION
+========================================================= */
+
+/*
+ * These are BACKEND endpoints.
+ *
+ * Your Supabase credentials must NEVER be placed here.
+ *
+ * The backend should use the credentials from .env.
+ */
+
+const API = {
+
+    DEVICE:
+        "/api/device",
+
+    UPLOAD:
+        "/api/upload"
+
+};
+
+
+/* =========================================================
+   LEVEL CONFIGURATION
+========================================================= */
+
+const levels = {
+
+    easy: {
+
+        name: "Easy",
+
+        size: 3,
+
+        shuffles: 80,
+
+        baseScore: 1000,
+
+        description:
+            "A relaxing 3×3 challenge."
+
+    },
+
+
+    normal: {
+
+        name: "Normal",
+
+        size: 4,
+
+        shuffles: 150,
+
+        baseScore: 1800,
+
+        description:
+            "A balanced challenge for puzzle fans."
+
+    },
+
+
+    hard: {
+
+        name: "Hard",
+
+        size: 5,
+
+        shuffles: 250,
+
+        baseScore: 3000,
+
+        description:
+            "Think carefully. Every move matters."
+
+    },
+
+
+    expert: {
+
+        name: "Expert",
+
+        size: 6,
+
+        shuffles: 400,
+
+        baseScore: 5000,
+
+        description:
+            "Only true puzzle masters survive."
+
+    }
+
+};
+
+
+/* =========================================================
+   DOM
+========================================================= */
+
+const setupScreen =
+    document.getElementById(
+        "setupScreen"
+    );
+
+const gameScreen =
+    document.getElementById(
+        "gameScreen"
+    );
+
+const playerNameInput =
+    document.getElementById(
+        "playerName"
+    );
+
+const maxMovesInput =
+    document.getElementById(
+        "maxMoves"
+    );
+
+const nameError =
+    document.getElementById(
+        "nameError"
+    );
+
+const movesError =
+    document.getElementById(
+        "movesError"
+    );
+
+const imageInput =
+    document.getElementById(
+        "imageInput"
+    );
+
+const chooseImageBtn =
+    document.getElementById(
+        "chooseImageBtn"
+    );
+
+const imagePreview =
+    document.getElementById(
+        "imagePreview"
+    );
+
+const startBtn =
+    document.getElementById(
+        "startBtn"
+    );
+
+const deviceStatus =
+    document.getElementById(
+        "deviceStatus"
+    );
+
+const difficultyButtons =
+    document.querySelectorAll(
+        ".difficulty"
+    );
+
+const randomChallengeBtn =
+    document.getElementById(
+        "randomChallengeBtn"
+    );
+
+const puzzle =
+    document.getElementById(
+        "puzzle"
+    );
+
+const gamePlayer =
+    document.getElementById(
+        "gamePlayer"
+    );
+
+const gameTitle =
+    document.getElementById(
+        "gameTitle"
+    );
+
+const gameDescription =
+    document.getElementById(
+        "gameDescription"
+    );
+
+const movesElement =
+    document.getElementById(
+        "moves"
+    );
+
+const timeElement =
+    document.getElementById(
+        "time"
+    );
+
+const bestElement =
+    document.getElementById(
+        "best"
+    );
+
+const hintsElement =
+    document.getElementById(
+        "hints"
+    );
+
+const scoreElement =
+    document.getElementById(
+        "score"
+    );
+
+const progressBar =
+    document.getElementById(
+        "progressBar"
+    );
+
+const progressText =
+    document.getElementById(
+        "progressText"
+    );
+
+const streakElement =
+    document.getElementById(
+        "streak"
+    );
+
+const hintBtn =
+    document.getElementById(
+        "hintBtn"
+    );
+
+const pauseBtn =
+    document.getElementById(
+        "pauseBtn"
+    );
+
+const restartGameBtn =
+    document.getElementById(
+        "restartGameBtn"
+    );
+
+const quitBtn =
+    document.getElementById(
+        "quitBtn"
+    );
+
+const pauseOverlay =
+    document.getElementById(
+        "pauseOverlay"
+    );
+
+const resumeBtn =
+    document.getElementById(
+        "resumeBtn"
+    );
+
+const victoryOverlay =
+    document.getElementById(
+        "victoryOverlay"
+    );
+
+const resultIcon =
+    document.getElementById(
+        "resultIcon"
+    );
+
+const resultTitle =
+    document.getElementById(
+        "resultTitle"
+    );
+
+const victoryMessage =
+    document.getElementById(
+        "victoryMessage"
+    );
+
+const playAgainBtn =
+    document.getElementById(
+        "playAgainBtn"
+    );
+
+const menuBtn =
+    document.getElementById(
+        "menuBtn"
+    );
+
+const toast =
+    document.getElementById(
+        "toast"
+    );
+
+const soundBtn =
+    document.getElementById(
+        "soundBtn"
+    );
+
+const themeBtn =
+    document.getElementById(
+        "themeBtn"
+    );
+
+const leaderboardList =
+    document.getElementById(
+        "leaderboardList"
+    );
+
+
+/* =========================================================
+   STATE
+========================================================= */
+
+let selectedLevel = "easy";
+
+let imageURL = null;
+
+let uploadedImagePath = null;
+
+let uploadedImageURL = null;
+
+let selectedImageFile = null;
+
+let deviceId = null;
+
+let board = [];
+
+let emptyIndex = 0;
+
+let moves = 0;
+
+let maxMoves = 0;
+
+let seconds = 0;
+
+let timer = null;
+
+let paused = false;
+
+let gameOver = false;
+
+let hints = 3;
+
+let streak = 0;
+
+let score = 0;
+
+let soundEnabled = true;
+
+let currentPlayer = "";
+
+let moveHistory = [];
+
+
+/* =========================================================
+   DIFFICULTY
+========================================================= */
+
+difficultyButtons.forEach(
+    button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                difficultyButtons.forEach(
+                    b =>
+                        b.classList.remove(
+                            "selected"
+                        )
+                );
+
+                button.classList.add(
+                    "selected"
+                );
+
+                selectedLevel =
+                    button.dataset.level;
+
+            }
+        );
+
+    }
+);
+
+
+/* =========================================================
+   RANDOM CHALLENGE
+========================================================= */
+
+randomChallengeBtn.addEventListener(
+    "click",
+    () => {
+
+        const names =
+            Object.keys(levels);
+
+        selectedLevel =
+            names[
+                Math.floor(
+                    Math.random() *
+                    names.length
+                )
+            ];
+
+        difficultyButtons.forEach(
+            button => {
+
+                button.classList.toggle(
+                    "selected",
+                    button.dataset.level ===
+                    selectedLevel
+                );
+
+            }
+        );
+
+        showToast(
+            `🎲 ${levels[selectedLevel].name} Challenge selected!`
+        );
+
+    }
+);
+
+
+/* =========================================================
+   IMAGE SELECTION
+========================================================= */
+
+chooseImageBtn.addEventListener(
+    "click",
+    () => {
+
+        imageInput.click();
+
+    }
+);
+
+
+imageInput.addEventListener(
+    "change",
+    () => {
+
+        const file =
+            imageInput.files[0];
+
+        if (!file) {
+            return;
+        }
+
+
+        if (
+            !file.type.startsWith(
+                "image/"
+            )
+        ) {
+
+            showToast(
+                "❌ Please choose a valid image."
+            );
+
+            imageInput.value = "";
+
+            return;
+        }
+
+
+        /*
+         * Maximum frontend file size:
+         * 10 MB.
+         */
+
+        const MAX_FILE_SIZE =
+            10 * 1024 * 1024;
+
+        if (
+            file.size >
+            MAX_FILE_SIZE
+        ) {
+
+            showToast(
+                "❌ Image must be smaller than 10 MB."
+            );
+
+            imageInput.value = "";
+
+            return;
+        }
+
+
+        selectedImageFile =
+            file;
+
+
+        if (imageURL) {
+
+            URL.revokeObjectURL(
+                imageURL
+            );
+
+        }
+
+
+        imageURL =
+            URL.createObjectURL(
+                file
+            );
+
+
+        imagePreview.src =
+            imageURL;
+
+        imagePreview.style.display =
+            "block";
+
+
+        showToast(
+            "✅ Image selected!"
+        );
+
+    }
+);
+
+
+/* =========================================================
+   INPUT VALIDATION
+========================================================= */
+
+playerNameInput.addEventListener(
+    "input",
+    () => {
+
+        playerNameInput.classList.remove(
+            "invalid"
+        );
+
+        nameError.textContent = "";
+
+    }
+);
+
+
+maxMovesInput.addEventListener(
+    "input",
+    () => {
+
+        maxMovesInput.classList.remove(
+            "invalid"
+        );
+
+        movesError.textContent = "";
+
+    }
+);
+
+
+/* =========================================================
+   START BUTTON
+========================================================= */
+
+startBtn.addEventListener(
+    "click",
+    startButtonHandler
+);
+
+
+async function startButtonHandler() {
+
+    const valid =
+        validateSetup();
+
+    if (!valid) {
+        return;
+    }
+
+
+    /*
+     * Make sure a device ID exists.
+     */
+
+    if (!deviceId) {
+
+        showToast(
+            "🔄 Connecting your device. Please wait..."
+        );
+
+        await initializeDevice();
+
+        if (!deviceId) {
+
+            showToast(
+                "❌ Could not connect to the server."
+            );
+
+            return;
+        }
+
+    }
+
+
+    /*
+     * Upload the selected photo through
+     * the backend before starting.
+     */
+
+    try {
+
+        startBtn.disabled = true;
+
+        startBtn.textContent =
+            "⏳ Uploading...";
+
+
+        await uploadImage();
+
+
+        currentPlayer =
+            playerNameInput.value.trim();
+
+
+        maxMoves =
+            Number(
+                maxMovesInput.value
+            );
+
+
+        startGame();
+
+
+    } catch (error) {
+
+        console.error(
+            "Image upload error:",
+            error
+        );
+
+        showToast(
+            "❌ Image upload failed. Please try again."
+        );
+
+    } finally {
+
+        startBtn.disabled = false;
+
+        startBtn.textContent =
+            "🚀 Start Puzzle";
+
+    }
+
+}
+
+
+/* =========================================================
+   VALIDATE SETUP
+========================================================= */
+
+function validateSetup() {
+
+    let valid = true;
+
+
+    /*
+     * PLAYER NAME
+     */
+
+    const player =
+        playerNameInput.value.trim();
+
+
+    if (!player) {
+
+        nameError.textContent =
+            "Please enter your name.";
+
+        playerNameInput.classList.add(
+            "invalid"
+        );
+
+        showToast(
+            "⚠️ Please enter your name."
+        );
+
+        valid = false;
+
+    } else if (
+        player.length < 2
+    ) {
+
+        nameError.textContent =
+            "Name must contain at least 2 characters.";
+
+        playerNameInput.classList.add(
+            "invalid"
+        );
+
+        showToast(
+            "⚠️ Please enter a valid name."
+        );
+
+        valid = false;
+
+    }
+
+
+    /*
+     * MAXIMUM MOVES
+     */
+
+    const enteredMoves =
+        maxMovesInput.value.trim();
+
+
+    if (
+        !enteredMoves ||
+        !/^\d+$/.test(enteredMoves)
+    ) {
+
+        movesError.textContent =
+            "Please enter a positive number of moves.";
+
+        maxMovesInput.classList.add(
+            "invalid"
+        );
+
+        if (valid) {
+
+            showToast(
+                "⚠️ Please enter your maximum moves."
+            );
+
+        }
+
+        valid = false;
+
+    } else {
+
+        const number =
+            Number(enteredMoves);
+
+        if (
+            !Number.isSafeInteger(
+                number
+            ) ||
+            number < 1
+        ) {
+
+            movesError.textContent =
+                "Maximum moves must be a positive number.";
+
+            maxMovesInput.classList.add(
+                "invalid"
+            );
+
+            if (valid) {
+
+                showToast(
+                    "⚠️ Maximum moves must be greater than 0."
+                );
+
+            }
+
+            valid = false;
+        }
+
+    }
+
+
+    /*
+     * IMAGE
+     */
+
+    if (!selectedImageFile) {
+
+        if (valid) {
+
+            showToast(
+                "⚠️ Please choose an image."
+            );
+
+        }
+
+        valid = false;
+
+    }
+
+
+    return valid;
+}
+
+
+/* =========================================================
+   DEVICE INITIALIZATION
+========================================================= */
+
+async function initializeDevice() {
+
+    try {
+
+        deviceStatus.className =
+            "device-status loading";
+
+        deviceStatus.textContent =
+            "🔄 Registering this device...";
+
+
+        const response =
+            await fetch(
+                API.DEVICE,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        /*
+                         * Do NOT send an IP address
+                         * from the browser.
+                         *
+                         * The backend should determine
+                         * the request IP itself.
+                         */
+
+                        user_agent:
+                            navigator.userAgent
+
+                    })
+
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Device request failed: ${response.status}`
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (!data.device_id) {
+
+            throw new Error(
+                "Backend did not return device_id."
+            );
+
+        }
+
+
+        deviceId =
+            data.device_id;
+
+
+        /*
+         * Keep the returned ID locally so the
+         * frontend can reuse it.
+         */
+
+        localStorage.setItem(
+            "puzzlemaster_device_id",
+            deviceId
+        );
+
+
+        deviceStatus.className =
+            "device-status";
+
+        deviceStatus.textContent =
+            "✅ Device connected";
+
+
+    } catch (error) {
+
+        console.error(
+            "Device initialization failed:",
+            error
+        );
+
+
+        /*
+         * Try previously returned ID.
+         */
+
+        const savedDeviceId =
+            localStorage.getItem(
+                "puzzlemaster_device_id"
+            );
+
+
+        if (savedDeviceId) {
+
+            deviceId =
+                savedDeviceId;
+
+            deviceStatus.className =
+                "device-status";
+
+            deviceStatus.textContent =
+                "✅ Device recognized";
+
+            return;
+
+        }
+
+
+        deviceStatus.className =
+            "device-status error";
+
+        deviceStatus.textContent =
+            "❌ Server connection unavailable";
+
+    }
+
+}
+
+
+/* =========================================================
+   IMAGE UPLOAD
+========================================================= */
+
+async function uploadImage() {
+
+    if (!selectedImageFile) {
+
+        throw new Error(
+            "No image selected."
+        );
+
+    }
+
+
+    const formData =
+        new FormData();
+
+
+    /*
+     * Backend receives:
+     *
+     * image
+     * device_id
+     * player_name
+     */
+
+    formData.append(
+        "image",
+        selectedImageFile
+    );
+
+
+    formData.append(
+        "device_id",
+        deviceId || ""
+    );
+
+
+    formData.append(
+        "player_name",
+        playerNameInput.value.trim()
+    );
+
+
+    const response =
+        await fetch(
+            API.UPLOAD,
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+
+    if (!response.ok) {
+
+        const errorText =
+            await response.text();
+
+        throw new Error(
+            errorText ||
+            `Upload failed: ${response.status}`
+        );
+
+    }
+
+
+    const data =
+        await response.json();
+
+
+    uploadedImagePath =
+        data.path || null;
+
+
+    uploadedImageURL =
+        data.url || null;
+
+
+    /*
+     * If backend returns a URL, use it.
+     *
+     * Otherwise use the local object URL.
+     */
+
+    if (uploadedImageURL) {
+
+        imageURL =
+            uploadedImageURL;
+
+    }
+
+}
+
+
+/* =========================================================
+   START GAME
+========================================================= */
+
+function startGame() {
+
+    const config =
+        levels[selectedLevel];
+
+
+    setupScreen.classList.remove(
+        "active"
+    );
+
+    gameScreen.classList.add(
+        "active"
+    );
+
+
+    gamePlayer.textContent =
+        currentPlayer;
+
+
+    gameTitle.textContent =
+        `${config.name} Challenge`;
+
+
+    gameDescription.textContent =
+        config.description;
+
+
+    hints = 3;
+
+    hintsElement.textContent =
+        hints;
+
+
+    moves = 0;
+
+    seconds = 0;
+
+    score = 0;
+
+    streak = 0;
+
+
+    paused = false;
+
+    gameOver = false;
+
+
+    moveHistory = [];
+
+
+    movesElement.textContent =
+        `0 / ${maxMoves}`;
+
+
+    scoreElement.textContent =
+        "0";
+
+
+    streakElement.textContent =
+        "🔥 Streak: 0";
+
+
+    pauseOverlay.classList.remove(
+        "show"
+    );
+
+    victoryOverlay.classList.remove(
+        "show"
+    );
+
+
+    resultTitle.classList.remove(
+        "failure-title"
+    );
+
+
+    configureBoard();
+
+
+    shuffleBoard(
+        config.shuffles
+    );
+
+
+    renderBoard();
+
+
+    updateBest();
+
+
+    updateTimer();
+
+
+    startTimer();
+
+
+    updateProgress();
+
+}
+
+
+/* =========================================================
+   BOARD CONFIGURATION
+========================================================= */
+
+function configureBoard() {
+
+    const size =
+        levels[selectedLevel].size;
+
+
+    const total =
+        size * size;
+
+
+    board =
+        Array.from(
+            {
+                length: total
+            },
+            (_, i) => i
+        );
+
+
+    emptyIndex =
+        total - 1;
+
+
+    puzzle.style.gridTemplateColumns =
+        `repeat(${size},1fr)`;
+
+
+    puzzle.style.gridTemplateRows =
+        `repeat(${size},1fr)`;
+
+}
+
+
+/* =========================================================
+   SHUFFLE
+========================================================= */
+
+function shuffleBoard(count) {
+
+    let previousEmpty = -1;
+
+
+    for (
+        let i = 0;
+        i < count;
+        i++
+    ) {
+
+        const neighbors =
+            getNeighbors(
+                emptyIndex
+            ).filter(
+                index =>
+                    index !==
+                    previousEmpty
+            );
+
+
+        const target =
+            neighbors[
+                Math.floor(
+                    Math.random() *
+                    neighbors.length
+                )
+            ];
+
+
+        [
+            board[emptyIndex],
+            board[target]
+        ] = [
+            board[target],
+            board[emptyIndex]
+        ];
+
+
+        previousEmpty =
+            emptyIndex;
+
+
+        emptyIndex =
+            target;
+
+    }
+
+
+    if (isSolved()) {
+
+        shuffleBoard(20);
+
+    }
+
+}
+
+
+/* =========================================================
+   NEIGHBORS
+========================================================= */
+
+function getNeighbors(index) {
+
+    const size =
+        levels[selectedLevel].size;
+
+
+    const row =
+        Math.floor(
+            index / size
+        );
+
+
+    const col =
+        index % size;
+
+
+    const result = [];
+
+
+    if (row > 0) {
+
+        result.push(
+            index - size
+        );
+
+    }
+
+
+    if (
+        row <
+        size - 1
+    ) {
+
+        result.push(
+            index + size
+        );
+
+    }
+
+
+    if (col > 0) {
+
+        result.push(
+            index - 1
+        );
+
+    }
+
+
+    if (
+        col <
+        size - 1
+    ) {
+
+        result.push(
+            index + 1
+        );
+
+    }
+
+
+    return result;
+
+}
+
+
+/* =========================================================
+   RENDER BOARD
+========================================================= */
+
+function renderBoard() {
+
+    puzzle.innerHTML = "";
+
+
+    const size =
+        levels[selectedLevel].size;
+
+
+    const total =
+        size * size;
+
+
+    const boardPixels =
+        puzzle.clientWidth ||
+        420;
+
+
+    board.forEach(
+        (tileNumber,index) => {
+
+            const tile =
+                document.createElement(
+                    "div"
+                );
+
+
+            tile.className =
+                "tile";
+
+
+            if (
+                tileNumber ===
+                total - 1
+            ) {
+
+                tile.classList.add(
+                    "empty"
+                );
+
+            } else {
+
+                const originalRow =
+                    Math.floor(
+                        tileNumber /
+                        size
+                    );
+
+
+                const originalCol =
+                    tileNumber %
+                    size;
+
+
+                const tileSize =
+                    boardPixels /
+                    size;
+
+
+                tile.style.backgroundImage =
+                    `url("${imageURL}")`;
+
+
+                tile.style.backgroundSize =
+                    `${boardPixels}px ${boardPixels}px`;
+
+
+                tile.style.backgroundPosition =
+                    `${-originalCol * tileSize}px ${-originalRow * tileSize}px`;
+
+
+                tile.addEventListener(
+                    "click",
+                    () =>
+                        moveTile(index)
+                );
+
+            }
+
+
+            puzzle.appendChild(
+                tile
+            );
+
+        }
+    );
+
+
+    updateProgress();
+
+}
+
+
+/* =========================================================
+   MOVE TILE
+========================================================= */
+
+function moveTile(index) {
+
+    if (
+        gameOver ||
+        paused
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+     * Maximum move protection.
+     */
+
+    if (
+        moves >= maxMoves
+    ) {
+
+        endGameByMoveLimit();
+
+        return;
+
+    }
+
+
+    const valid =
+        getNeighbors(
+            emptyIndex
+        );
+
+
+    if (
+        !valid.includes(index)
+    ) {
+
+        streak = 0;
+
+
+        streakElement.textContent =
+            "💔 Streak broken";
+
+
+        playSound("bad");
+
+
+        return;
+
+    }
+
+
+    [
+        board[index],
+        board[emptyIndex]
+    ] = [
+        board[emptyIndex],
+        board[index]
+    ];
+
+
+    moveHistory.push(index);
+
+
+    emptyIndex =
+        index;
+
+
+    moves++;
+
+
+    streak++;
+
+
+    score =
+        Math.max(
+            0,
+            score +
+            10 +
+            Math.min(
+                streak,
+                10
+            )
+        );
+
+
+    movesElement.textContent =
+        `${moves} / ${maxMoves}`;
+
+
+    scoreElement.textContent =
+        score;
+
+
+    streakElement.textContent =
+        `🔥 Streak: ${streak}`;
+
+
+    playSound("move");
+
+
+    renderBoard();
+
+
+    /*
+     * IMPORTANT:
+     * Check victory BEFORE checking the
+     * move limit.
+     *
+     * Therefore if the player solves
+     * exactly on their final move,
+     * they win.
+     */
+
+    if (
+        checkVictory()
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        moves >= maxMoves
+    ) {
+
+        endGameByMoveLimit();
+
+    }
+
+}
+
+
+/* =========================================================
+   VICTORY
+========================================================= */
+
+function checkVictory() {
+
+    if (!isSolved()) {
+
+        return false;
+
+    }
+
+
+    gameOver = true;
+
+
+    stopTimer();
+
+
+    const timeBonus =
+        Math.max(
+            0,
+            1000 -
+            seconds * 5
+        );
+
+
+    const multiplier = {
+
+        easy: 1,
+
+        normal: 1.5,
+
+        hard: 2,
+
+        expert: 3
+
+    }[selectedLevel];
+
+
+    score =
+        Math.round(
+            (
+                score +
+                timeBonus
+            ) *
+            multiplier
+        );
+
+
+    scoreElement.textContent =
+        score;
+
+
+    saveScore();
+
+
+    unlockAchievements();
+
+
+    playSound("win");
+
+
+    createConfetti();
+
+
+    document.getElementById(
+        "finalTime"
+    ).textContent =
+        formatTime(seconds);
+
+
+    document.getElementById(
+        "finalMoves"
+    ).textContent =
+        `${moves} / ${maxMoves}`;
+
+
+    document.getElementById(
+        "finalScore"
+    ).textContent =
+        score;
+
+
+    resultIcon.textContent =
+        "🏆";
+
+
+    resultTitle.textContent =
+        "Grid Synchronized!";
+
+
+    resultTitle.classList.remove(
+        "failure-title"
+    );
+
+
+    victoryMessage.textContent =
+        `Excellent work, ${currentPlayer}! You mastered the puzzle in ${moves} moves.`;
+
+
+    setTimeout(
+        () => {
+
+            victoryOverlay.classList.add(
+                "show"
+            );
+
+        },
+        500
+    );
+
+
+    return true;
+
+}
+
+
+/* =========================================================
+   MOVE LIMIT FAILURE
+========================================================= */
+
+function endGameByMoveLimit() {
+
+    if (gameOver) {
+        return;
+    }
+
+
+    gameOver = true;
+
+
+    stopTimer();
+
+
+    /*
+     * Do not save a normal leaderboard score
+     * for an unsuccessful game.
+     */
+
+    resultIcon.textContent =
+        "💔";
+
+
+    resultTitle.textContent =
+        "Move Limit Reached";
+
+
+    resultTitle.classList.add(
+        "failure-title"
+    );
+
+
+    victoryMessage.textContent =
+        `You used all ${maxMoves} moves. Don't give up — try again and beat the puzzle!`;
+
+
+    document.getElementById(
+        "finalTime"
+    ).textContent =
+        formatTime(seconds);
+
+
+    document.getElementById(
+        "finalMoves"
+    ).textContent =
+        `${moves} / ${maxMoves}`;
+
+
+    document.getElementById(
+        "finalScore"
+    ).textContent =
+        score;
+
+
+    playSound("bad");
+
+
+    setTimeout(
+        () => {
+
+            victoryOverlay.classList.add(
+                "show"
+            );
+
+        },
+        300
+    );
+
+}
+
+
+/* =========================================================
+   SOLVED CHECK
+========================================================= */
+
+function isSolved() {
+
+    return board.every(
+        (value,index) =>
+            value === index
+    );
+
+}
+
+
+/* =========================================================
+   TIMER
+========================================================= */
+
+function startTimer() {
+
+    stopTimer();
+
+
+    timer =
+        setInterval(
+            () => {
+
+                if (
+                    paused ||
+                    gameOver
+                ) {
+
+                    return;
+
+                }
+
+
+                seconds++;
+
+
+                updateTimer();
+
+            },
+            1000
+        );
+
+}
+
+
+function stopTimer() {
+
+    if (timer) {
+
+        clearInterval(
+            timer
+        );
+
+        timer = null;
+
+    }
+
+}
+
+
+function updateTimer() {
+
+    timeElement.textContent =
+        formatTime(seconds);
+
+}
+
+
+function formatTime(
+    totalSeconds
+) {
+
+    const minutes =
+        Math.floor(
+            totalSeconds / 60
+        );
+
+
+    const remaining =
+        totalSeconds % 60;
+
+
+    return (
+        String(minutes)
+            .padStart(2,"0") +
+        ":" +
+        String(remaining)
+            .padStart(2,"0")
+    );
+
+}
+
+
+/* =========================================================
+   PROGRESS
+========================================================= */
+
+function updateProgress() {
+
+    if (!board.length) {
+
+        return;
+
+    }
+
+
+    let correct = 0;
+
+
+    board.forEach(
+        (value,index) => {
+
+            if (
+                value === index
+            ) {
+
+                correct++;
+
+            }
+
+        }
+    );
+
+
+    const percentage =
+        Math.round(
+            (
+                correct /
+                board.length
+            ) * 100
+        );
+
+
+    progressBar.style.width =
+        `${percentage}%`;
+
+
+    progressText.textContent =
+        `${percentage}%`;
+
+}
+
+
+/* =========================================================
+   HINT
+========================================================= */
+
+hintBtn.addEventListener(
+    "click",
+    useHint
+);
+
+
+function useHint() {
+
+    if (
+        gameOver ||
+        paused
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        hints <= 0
+    ) {
+
+        showToast(
+            "No hints remaining!"
+        );
+
+        return;
+
+    }
+
+
+    const possible =
+        getNeighbors(
+            emptyIndex
+        );
+
+
+    let recommended =
+        possible.find(
+            index =>
+                board[index] === index
+        );
+
+
+    if (
+        recommended ===
+        undefined
+    ) {
+
+        recommended =
+            possible[
+                Math.floor(
+                    Math.random() *
+                    possible.length
+                )
+            ];
+
+    }
+
+
+    const tiles =
+        puzzle.querySelectorAll(
+            ".tile"
+        );
+
+
+    if (
+        tiles[recommended]
+    ) {
+
+        tiles[
+            recommended
+        ].classList.add(
+            "hint"
+        );
+
+    }
+
+
+    hints--;
+
+
+    hintsElement.textContent =
+        hints;
+
+
+    /*
+     * Hint penalty.
+     */
+
+    score =
+        Math.max(
+            0,
+            score - 100
+        );
+
+
+    scoreElement.textContent =
+        score;
+
+
+    showToast(
+        "💡 Try the highlighted tile!"
+    );
+
+
+    setTimeout(
+        () => {
+
+            if (
+                tiles[recommended]
+            ) {
+
+                tiles[
+                    recommended
+                ].classList.remove(
+                    "hint"
+                );
+
+            }
+
+        },
+        1800
+    );
+
+}
+
+
+/* =========================================================
+   PAUSE
+========================================================= */
+
+pauseBtn.addEventListener(
+    "click",
+    () => {
+
+        if (gameOver) {
+
+            return;
+
+        }
+
+
+        paused = true;
+
+
+        pauseOverlay.classList.add(
+            "show"
+        );
+
+    }
+);
+
+
+resumeBtn.addEventListener(
+    "click",
+    () => {
+
+        paused = false;
+
+
+        pauseOverlay.classList.remove(
+            "show"
+        );
+
+    }
+);
+
+
+/* =========================================================
+   RESTART
+========================================================= */
+
+restartGameBtn.addEventListener(
+    "click",
+    () => {
+
+        if (
+            confirm(
+                "Restart this puzzle?"
+            )
+        ) {
+
+            startGame();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   QUIT
+========================================================= */
+
+quitBtn.addEventListener(
+    "click",
+    () => {
+
+        if (
+            confirm(
+                "Return to the main menu?"
+            )
+        ) {
+
+            stopTimer();
+
+
+            gameScreen.classList.remove(
+                "active"
+            );
+
+
+            setupScreen.classList.add(
+                "active"
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   PLAY AGAIN
+========================================================= */
+
+playAgainBtn.addEventListener(
+    "click",
+    () => {
+
+        victoryOverlay.classList.remove(
+            "show"
+        );
+
+
+        startGame();
+
+    }
+);
+
+
+/* =========================================================
+   MENU
+========================================================= */
+
+menuBtn.addEventListener(
+    "click",
+    () => {
+
+        victoryOverlay.classList.remove(
+            "show"
+        );
+
+
+        gameScreen.classList.remove(
+            "active"
+        );
+
+
+        setupScreen.classList.add(
+            "active"
+        );
+
+
+        loadLeaderboard();
+
+    }
+);
+
+
+/* =========================================================
+   SCORE STORAGE
+========================================================= */
+
+function getScores() {
+
+    try {
+
+        return JSON.parse(
+            localStorage.getItem(
+                "puzzlemasterScores"
+            ) || "[]"
+        );
+
+    } catch {
+
+        return [];
+
+    }
+
+}
+
+
+function saveScore() {
+
+    const scores =
+        getScores();
+
+
+    scores.push({
+
+        name:
+            currentPlayer,
+
+        difficulty:
+            levels[selectedLevel].name,
+
+        level:
+            selectedLevel,
+
+        score,
+
+        moves,
+
+        maxMoves,
+
+        time:
+            seconds,
+
+        device_id:
+            deviceId,
+
+        image_path:
+            uploadedImagePath,
+
+        date:
+            new Date()
+                .toLocaleDateString()
+
+    });
+
+
+    scores.sort(
+        (a,b) =>
+            b.score -
+            a.score
+    );
+
+
+    localStorage.setItem(
+        "puzzlemasterScores",
+        JSON.stringify(
+            scores.slice(0,20)
+        )
+    );
+
+
+    loadLeaderboard();
+
+}
+
+
+/* =========================================================
+   LEADERBOARD
+========================================================= */
+
+function loadLeaderboard() {
+
+    const scores =
+        getScores();
+
+
+    if (!scores.length) {
+
+        leaderboardList.innerHTML =
+            `
+            <div style="
+                color:var(--muted);
+                font-size:.8rem;
+                padding:15px 0;
+            ">
+                No scores yet.
+                Be the first PuzzleMaster! 🚀
+            </div>
+            `;
+
+        return;
+
+    }
+
+
+    leaderboardList.innerHTML =
+        scores
+            .slice(0,10)
+            .map(
+                (item,index) => {
+
+                    return `
+                    <div class="score-row">
+
+                        <div class="rank">
+                            #${index + 1}
+                        </div>
+
+                        <div class="score-name">
+                            ${escapeHTML(item.name)}
+                        </div>
+
+                        <div class="score-meta">
+                            ${escapeHTML(item.difficulty)}
+                        </div>
+
+                        <div class="score-meta">
+                            ${item.score} pts
+                        </div>
+
+                    </div>
+                    `;
+
+                }
+            )
+            .join("");
+
+}
+
+
+/* =========================================================
+   BEST SCORE
+========================================================= */
+
+function updateBest() {
+
+    const scores =
+        getScores();
+
+
+    const personal =
+        scores.filter(
+            item =>
+                item.name ===
+                    currentPlayer &&
+                item.level ===
+                    selectedLevel
+        );
+
+
+    if (!personal.length) {
+
+        bestElement.textContent =
+            "--";
+
+        return;
+
+    }
+
+
+    const best =
+        Math.max(
+            ...personal.map(
+                item =>
+                    item.score
+            )
+        );
+
+
+    bestElement.textContent =
+        best;
+
+}
+
+
+/* =========================================================
+   ACHIEVEMENTS
+========================================================= */
+
+function unlockAchievements() {
+
+    const scores =
+        getScores();
+
+
+    const first =
+        scores.length >= 1;
+
+
+    const speed =
+        seconds < 60;
+
+
+    const expert =
+        selectedLevel === "expert";
+
+
+    const ten =
+        scores.length >= 10;
+
+
+    setAchievement(
+        "achievementFirst",
+        first
+    );
+
+
+    setAchievement(
+        "achievementSpeed",
+        speed
+    );
+
+
+    setAchievement(
+        "achievementExpert",
+        expert
+    );
+
+
+    setAchievement(
+        "achievementTen",
+        ten
+    );
+
+
+    if (first) {
+
+        localStorage.setItem(
+            "achievement_first",
+            "1"
+        );
+
+    }
+
+
+    if (speed) {
+
+        localStorage.setItem(
+            "achievement_speed",
+            "1"
+        );
+
+    }
+
+
+    if (expert) {
+
+        localStorage.setItem(
+            "achievement_expert",
+            "1"
+        );
+
+    }
+
+
+    if (ten) {
+
+        localStorage.setItem(
+            "achievement_ten",
+            "1"
+        );
+
+    }
+
+}
+
+
+function setAchievement(
+    id,
+    current
+) {
+
+    const element =
+        document.getElementById(
+            id
+        );
+
+
+    const storageKey =
+        id
+            .replace(
+                "achievement",
+                "achievement_"
+            )
+            .toLowerCase();
+
+
+    const unlocked =
+        current ||
+        localStorage.getItem(
+            storageKey
+        );
+
+
+    if (unlocked) {
+
+        element.classList.add(
+            "unlocked"
+        );
+
+    }
+
+}
+
+
+function loadAchievements() {
+
+    const mapping = {
+
+        achievementFirst:
+            "achievement_first",
+
+        achievementSpeed:
+            "achievement_speed",
+
+        achievementExpert:
+            "achievement_expert",
+
+        achievementTen:
+            "achievement_ten"
+
+    };
+
+
+    Object.entries(
+        mapping
+    ).forEach(
+        ([elementId,key]) => {
+
+            if (
+                localStorage.getItem(
+                    key
+                )
+            ) {
+
+                document
+                    .getElementById(
+                        elementId
+                    )
+                    .classList.add(
+                        "unlocked"
+                    );
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   SOUND
+========================================================= */
+
+function playSound(type) {
+
+    if (!soundEnabled) {
+
+        return;
+
+    }
+
+
+    try {
+
+        const AudioContext =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+
+        if (!AudioContext) {
+
+            return;
+
+        }
+
+
+        const ctx =
+            new AudioContext();
+
+
+        const oscillator =
+            ctx.createOscillator();
+
+
+        const gain =
+            ctx.createGain();
+
+
+        oscillator.connect(
+            gain
+        );
+
+
+        gain.connect(
+            ctx.destination
+        );
+
+
+        const frequencies = {
+
+            move: 420,
+
+            bad: 130,
+
+            win: 720
+
+        };
+
+
+        oscillator.frequency.value =
+            frequencies[type] ||
+            400;
+
+
+        oscillator.type =
+            type === "win"
+                ? "sine"
+                : "triangle";
+
+
+        gain.gain.setValueAtTime(
+            .0001,
+            ctx.currentTime
+        );
+
+
+        gain.gain.exponentialRampToValueAtTime(
+            .07,
+            ctx.currentTime + .01
+        );
+
+
+        gain.gain.exponentialRampToValueAtTime(
+            .0001,
+            ctx.currentTime +
+            (
+                type === "win"
+                    ? .45
+                    : .12
+            )
+        );
+
+
+        oscillator.start();
+
+
+        oscillator.stop(
+            ctx.currentTime +
+            (
+                type === "win"
+                    ? .45
+                    : .12
+            )
+        );
+
+
+    } catch (error) {
+
+        console.log(
+            "Audio unavailable."
+        );
+
+    }
+
+}
+
+
+soundBtn.addEventListener(
+    "click",
+    () => {
+
+        soundEnabled =
+            !soundEnabled;
+
+
+        soundBtn.textContent =
+            soundEnabled
+                ? "🔊"
+                : "🔇";
+
+
+        showToast(
+            soundEnabled
+                ? "🔊 Sound enabled"
+                : "🔇 Sound muted"
+        );
+
+    }
+);
+
+
+/* =========================================================
+   THEME
+========================================================= */
+
+themeBtn.addEventListener(
+    "click",
+    () => {
+
+        document.body.classList.toggle(
+            "light"
+        );
+
+
+        const light =
+            document.body.classList.contains(
+                "light"
+            );
+
+
+        themeBtn.textContent =
+            light
+                ? "☀️"
+                : "🌙";
+
+
+        localStorage.setItem(
+            "puzzlemasterTheme",
+            light
+                ? "light"
+                : "dark"
+        );
+
+    }
+);
+
+
+function loadTheme() {
+
+    const theme =
+        localStorage.getItem(
+            "puzzlemasterTheme"
+        );
+
+
+    if (
+        theme === "light"
+    ) {
+
+        document.body.classList.add(
+            "light"
+        );
+
+
+        themeBtn.textContent =
+            "☀️";
+
+    }
+
+}
+
+
+/* =========================================================
+   CONFETTI
+========================================================= */
+
+function createConfetti() {
+
+    const colors = [
+
+        "#6366f1",
+
+        "#8b5cf6",
+
+        "#10b981",
+
+        "#f59e0b",
+
+        "#ef4444",
+
+        "#38bdf8",
+
+        "#f472b6"
+
+    ];
+
+
+    for (
+        let i = 0;
+        i < 100;
+        i++
+    ) {
+
+        const piece =
+            document.createElement(
+                "div"
+            );
+
+
+        piece.className =
+            "confetti";
+
+
+        piece.style.left =
+            Math.random() *
+            100 +
+            "vw";
+
+
+        piece.style.background =
+            colors[
+                Math.floor(
+                    Math.random() *
+                    colors.length
+                )
+            ];
+
+
+        piece.style.setProperty(
+            "--x",
+            (
+                Math.random() *
+                300 -
+                150
+            ) +
+            "px"
+        );
+
+
+        piece.style.animationDuration =
+            (
+                2 +
+                Math.random() * 3
+            ) +
+            "s";
+
+
+        piece.style.animationDelay =
+            Math.random() *
+            .5 +
+            "s";
+
+
+        document.body.appendChild(
+            piece
+        );
+
+
+        setTimeout(
+            () =>
+                piece.remove(),
+            6000
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+let toastTimeout;
+
+
+function showToast(message) {
+
+    clearTimeout(
+        toastTimeout
+    );
+
+
+    toast.textContent =
+        message;
+
+
+    toast.classList.add(
+        "show"
+    );
+
+
+    toastTimeout =
+        setTimeout(
+            () => {
+
+                toast.classList.remove(
+                    "show"
+                );
+
+            },
+            2500
+        );
+
+}
+
+
+/* =========================================================
+   SECURITY
+========================================================= */
+
+function escapeHTML(value) {
+
+    return String(value)
+
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
+
+}
+
+
+/* =========================================================
+   INITIALIZE DEVICE
+========================================================= */
+
+async function initializeApplication() {
+
+    loadTheme();
+
+    loadLeaderboard();
+
+    loadAchievements();
+
+
+    /*
+     * If we already have a locally saved
+     * device ID, display a recognized
+     * state immediately while the backend
+     * verifies/updates it.
+     */
+
+    const savedDeviceId =
+        localStorage.getItem(
+            "puzzlemaster_device_id"
+        );
+
+
+    if (savedDeviceId) {
+
+        deviceId =
+            savedDeviceId;
+
+        deviceStatus.className =
+            "device-status";
+
+        deviceStatus.textContent =
+            "🔄 Recognizing your device...";
+
+    }
+
+
+    await initializeDevice();
+
+}
+
+
+/* =========================================================
+   START APPLICATION
+========================================================= */
+
+initializeApplication();
+
+</script>
+
+</body>
+</html>
