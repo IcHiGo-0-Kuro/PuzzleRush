@@ -125,6 +125,13 @@ function isAllowedOrigin(origin) {
         return true;
     }
 
+    /*
+     * 🚀 FIX: Allow your exact GitHub Pages origin
+     */
+    if (origin === "https://ichigo-0-kuro.github.io") {
+        return true;
+    }
+
 
     /*
      * Allow Vercel deployment URLs.
@@ -150,18 +157,6 @@ function isAllowedOrigin(origin) {
 
         return false;
     }
-
-
-    /*
-     * If you have a custom frontend domain,
-     * add it here.
-     *
-     * Example:
-     *
-     * if (origin === "https://www.example.com") {
-     *     return true;
-     * }
-     */
 
     return false;
 }
