@@ -172,7 +172,7 @@ app.use(
         origin: [
             "http://localhost:5173",
             "http://localhost:3000",
-            "https://github.io" // 👈 Your live website
+            "https://ichigo-0-kuro.github.io" // 👈 Make sure your full username is here!
         ],
 
         credentials: true,
@@ -191,6 +191,7 @@ app.use(
         ]
     })
 );
+
 
 
 
