@@ -263,8 +263,8 @@ const upload = multer({
 const DEVICE_COOKIE =
     "puzzlemaster_device_id";
 
-const PHOTO_BUCKET =
-    "puzzle-images";
+const PHOTO_BUCKET = "puzzle-images"; // 👈 Must match Supabase exactly
+
 
 
 /* =========================================================
