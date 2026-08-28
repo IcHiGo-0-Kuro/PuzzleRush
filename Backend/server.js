@@ -1673,7 +1673,7 @@ async function handlePhotoUpload(
  */
 app.post(
     "/api/upload-photo",
-    upload.single("photo"),
+    upload.single("image"),
     handlePhotoUpload
 );
 
@@ -1683,7 +1683,7 @@ app.post(
  */
 app.post(
     "/api/upload",
-    upload.single("photo"),
+    upload.single("image"),
     handlePhotoUpload
 );
 
