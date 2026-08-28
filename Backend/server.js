@@ -169,25 +169,11 @@ function isAllowedOrigin(origin) {
 
 app.use(
     cors({
-        origin: function (origin, callback) {
-
-            if (isAllowedOrigin(origin)) {
-
-                callback(null, true);
-
-            } else {
-
-                console.warn(
-                    `🚫 CORS blocked origin: ${origin}`
-                );
-
-                callback(
-                    new Error(
-                        "Not allowed by CORS."
-                    )
-                );
-            }
-        },
+        origin: [
+            "http://localhost:5173",
+            "http://localhost:3000",
+            "https://github.io" // 👈 Your live website
+        ],
 
         credentials: true,
 
@@ -205,6 +191,7 @@ app.use(
         ]
     })
 );
+
 
 
 /* =========================================================
