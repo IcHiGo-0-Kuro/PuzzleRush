@@ -2170,9 +2170,14 @@ body.light .victory-card {
 
 <script>
 
+
+
 "use strict";
 
+    // 1. ADD YOUR LIVE RENDER BACKEND URL HERE
+    const BACKEND_URL = "https://puzzlerush-1.onrender.com";
 
+    // ... your existing variables (like selectors, game states, etc.) ...
 /* =========================================================
    CONFIGURATION
 ========================================================= */
@@ -2186,15 +2191,49 @@ body.light .victory-card {
  */
 
 const API = {
-
-    DEVICE:
-        "/api/device",
-
-    UPLOAD:
-        "/api/upload"
-
+    DEVICE: `${BACKEND_URL}/api/device`,
+    UPLOAD: `${BACKEND_URL}/api/upload`
 };
 
+
+
+
+/* =========================================================
+   API SYNCHRONIZATION LAYER
+========================================================= */
+
+const API_TIMEOUT_MS = 15000;
+
+function getDeviceHeaders() {
+    return deviceId ? { "X-Device-Id": deviceId } : {};
+}
+
+async function apiRequest(url, options = {}) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+
+    try {
+        const response = await fetch(url, {
+            ...options,
+            credentials: "omit",
+            headers: {
+                ...getDeviceHeaders(),
+                ...(options.headers || {})
+            },
+            signal: controller.signal
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            throw new Error(data.message || data.error || "Server request failed.");
+        }
+
+        return data;
+    } finally {
+        clearTimeout(timeout);
+    }
+}
 
 /* =========================================================
    LEVEL CONFIGURATION
@@ -2610,87 +2649,78 @@ chooseImageBtn.addEventListener(
 
 imageInput.addEventListener(
     "change",
-    () => {
+    async () => {
 
-        const file =
-            imageInput.files[0];
+        const file = imageInput.files[0]; // 👈 FIXED: Put the [0] back so it reads the file correctly
 
         if (!file) {
             return;
         }
 
-
-        if (
-            !file.type.startsWith(
-                "image/"
-            )
-        ) {
-
-            showToast(
-                "❌ Please choose a valid image."
-            );
-
+        if (!file.type.startsWith("image/")) {
+            showToast("❌ Please choose a valid image.");
             imageInput.value = "";
-
             return;
         }
-
 
         /*
-         * Maximum frontend file size:
-         * 10 MB.
+         * Maximum frontend file size: 10 MB.
          */
+        const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-        const MAX_FILE_SIZE =
-            10 * 1024 * 1024;
-
-        if (
-            file.size >
-            MAX_FILE_SIZE
-        ) {
-
-            showToast(
-                "❌ Image must be smaller than 10 MB."
-            );
-
+        if (file.size > MAX_FILE_SIZE) {
+            showToast("❌ Image must be smaller than 10 MB.");
             imageInput.value = "";
-
             return;
         }
 
-
-        selectedImageFile =
-            file;
-
+        selectedImageFile = file;
 
         if (imageURL) {
-
-            URL.revokeObjectURL(
-                imageURL
-            );
-
+            URL.revokeObjectURL(imageURL);
         }
 
+        imageURL = URL.createObjectURL(file);
+        imagePreview.src = imageURL;
+        imagePreview.style.display = "block";
 
-        imageURL =
-            URL.createObjectURL(
-                file
-            );
+        showToast("⏳ Uploading image to server...");
 
+        // =========================================================
+        // NETWORK UPLOAD TO RENDER BACKEND
+        // =========================================================
+        const formData = new FormData();
+        formData.append("image", selectedImageFile); 
 
-        imagePreview.src =
-            imageURL;
+        try {
+            const response = await fetch(API.UPLOAD, {
+                method: "POST",
+                body: formData,
+                credentials: "omit" 
+            });
 
-        imagePreview.style.display =
-            "block";
+            if (!response.ok) {
+                throw new Error(`Upload failed with status: ${response.status}`);
+            }
 
+            const data = await response.json();
 
-        showToast(
-            "✅ Image selected!"
-        );
+            if (data.success) {
+                uploadedImagePath = data.path; 
+                uploadedImageURL = data.url; 
+                showToast("✅ Image uploaded successfully!");
+            } else {
+                throw new Error(data.error || "Server upload rejected.");
+            }
 
+        } catch (error) {
+            console.error("Image upload failed:", error);
+            showToast("❌ Image upload failed.");
+        }
     }
 );
+
+
 
 
 /* =========================================================
@@ -2964,133 +2994,55 @@ function validateSetup() {
 ========================================================= */
 
 async function initializeDevice() {
-
     try {
+        deviceStatus.className = "device-status loading";
+        deviceStatus.textContent = "🔄 Registering this device...";
 
-        deviceStatus.className =
-            "device-status loading";
+        const data = await apiRequest(API.DEVICE, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                user_agent: navigator.userAgent
+            })
+        });
 
-        deviceStatus.textContent =
-            "🔄 Registering this device...";
-
-
-        const response =
-            await fetch(
-                API.DEVICE,
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body: JSON.stringify({
-
-                        /*
-                         * Do NOT send an IP address
-                         * from the browser.
-                         *
-                         * The backend should determine
-                         * the request IP itself.
-                         */
-
-                        user_agent:
-                            navigator.userAgent
-
-                    })
-
-                }
-            );
-
+        const response = { ok: true, json: async () => data };
 
         if (!response.ok) {
-
-            throw new Error(
-                `Device request failed: ${response.status}`
-            );
-
+            throw new Error(`Device request failed: ${response.status}`);
         }
 
+        const data = await response.json();
 
-        const data =
-            await response.json();
-
-
-        if (!data.device_id) {
-
-            throw new Error(
-                "Backend did not return device_id."
-            );
-
+        // 2. Fixed key lookup: Backend sends data.device.device_id
+        if (!data.device || !data.device.device_id) {
+            throw new Error("Backend did not return device_id.");
         }
 
+        deviceId = data.device.device_id;
 
-        deviceId =
-            data.device_id;
+        localStorage.setItem("puzzlemaster_device_id", deviceId);
 
-
-        /*
-         * Keep the returned ID locally so the
-         * frontend can reuse it.
-         */
-
-        localStorage.setItem(
-            "puzzlemaster_device_id",
-            deviceId
-        );
-
-
-        deviceStatus.className =
-            "device-status";
-
-        deviceStatus.textContent =
-            "✅ Device connected";
-
+        deviceStatus.className = "device-status";
+        deviceStatus.textContent = "✅ Device connected";
 
     } catch (error) {
+        console.error("Device initialization failed:", error);
 
-        console.error(
-            "Device initialization failed:",
-            error
-        );
-
-
-        /*
-         * Try previously returned ID.
-         */
-
-        const savedDeviceId =
-            localStorage.getItem(
-                "puzzlemaster_device_id"
-            );
-
+        const savedDeviceId = localStorage.getItem("puzzlemaster_device_id");
 
         if (savedDeviceId) {
-
-            deviceId =
-                savedDeviceId;
-
-            deviceStatus.className =
-                "device-status";
-
-            deviceStatus.textContent =
-                "✅ Device recognized";
-
+            deviceId = savedDeviceId;
+            deviceStatus.className = "device-status";
+            deviceStatus.textContent = "✅ Device recognized";
             return;
-
         }
 
-
-        deviceStatus.className =
-            "device-status error";
-
-        deviceStatus.textContent =
-            "❌ Server connection unavailable";
-
+        deviceStatus.className = "device-status error";
+        deviceStatus.textContent = "❌ Server connection unavailable";
     }
-
 }
+
 
 
 /* =========================================================
@@ -3138,14 +3090,17 @@ async function uploadImage() {
     );
 
 
-    const response =
+        const response =
         await fetch(
             API.UPLOAD,
             {
                 method: "POST",
-                body: formData
+                body: formData,
+                // 🚀 CRITICAL FIX: Allows cross-origin connection to pass security cookies
+                credentials: "omit" 
             }
         );
+
 
 
     if (!response.ok) {

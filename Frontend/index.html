@@ -2196,6 +2196,45 @@ const API = {
 };
 
 
+
+
+/* =========================================================
+   API SYNCHRONIZATION LAYER
+========================================================= */
+
+const API_TIMEOUT_MS = 15000;
+
+function getDeviceHeaders() {
+    return deviceId ? { "X-Device-Id": deviceId } : {};
+}
+
+async function apiRequest(url, options = {}) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+
+    try {
+        const response = await fetch(url, {
+            ...options,
+            credentials: "omit",
+            headers: {
+                ...getDeviceHeaders(),
+                ...(options.headers || {})
+            },
+            signal: controller.signal
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            throw new Error(data.message || data.error || "Server request failed.");
+        }
+
+        return data;
+    } finally {
+        clearTimeout(timeout);
+    }
+}
+
 /* =========================================================
    LEVEL CONFIGURATION
 ========================================================= */
@@ -2657,7 +2696,7 @@ imageInput.addEventListener(
             const response = await fetch(API.UPLOAD, {
                 method: "POST",
                 body: formData,
-                credentials: "include" 
+                credentials: "omit" 
             });
 
             if (!response.ok) {
@@ -2959,17 +2998,15 @@ async function initializeDevice() {
         deviceStatus.className = "device-status loading";
         deviceStatus.textContent = "🔄 Registering this device...";
 
-        const response = await fetch(API.DEVICE, {
+        const data = await apiRequest(API.DEVICE, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            // 1. Added credentials flag to allow cross-site cookies safely
-            credentials: "include", 
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 user_agent: navigator.userAgent
             })
         });
+
+        const response = { ok: true, json: async () => data };
 
         if (!response.ok) {
             throw new Error(`Device request failed: ${response.status}`);
@@ -3060,7 +3097,7 @@ async function uploadImage() {
                 method: "POST",
                 body: formData,
                 // 🚀 CRITICAL FIX: Allows cross-origin connection to pass security cookies
-                credentials: "include" 
+                credentials: "omit" 
             }
         );
 
