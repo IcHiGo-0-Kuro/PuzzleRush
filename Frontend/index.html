@@ -2964,133 +2964,57 @@ function validateSetup() {
 ========================================================= */
 
 async function initializeDevice() {
-
     try {
+        deviceStatus.className = "device-status loading";
+        deviceStatus.textContent = "🔄 Registering this device...";
 
-        deviceStatus.className =
-            "device-status loading";
-
-        deviceStatus.textContent =
-            "🔄 Registering this device...";
-
-
-        const response =
-            await fetch(
-                API.DEVICE,
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body: JSON.stringify({
-
-                        /*
-                         * Do NOT send an IP address
-                         * from the browser.
-                         *
-                         * The backend should determine
-                         * the request IP itself.
-                         */
-
-                        user_agent:
-                            navigator.userAgent
-
-                    })
-
-                }
-            );
-
+        const response = await fetch(API.DEVICE, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            // 1. Added credentials flag to allow cross-site cookies safely
+            credentials: "include", 
+            body: JSON.stringify({
+                user_agent: navigator.userAgent
+            })
+        });
 
         if (!response.ok) {
-
-            throw new Error(
-                `Device request failed: ${response.status}`
-            );
-
+            throw new Error(`Device request failed: ${response.status}`);
         }
 
+        const data = await response.json();
 
-        const data =
-            await response.json();
-
-
-        if (!data.device_id) {
-
-            throw new Error(
-                "Backend did not return device_id."
-            );
-
+        // 2. Fixed key lookup: Backend sends data.device.device_id
+        if (!data.device || !data.device.device_id) {
+            throw new Error("Backend did not return device_id.");
         }
 
+        deviceId = data.device.device_id;
 
-        deviceId =
-            data.device_id;
+        localStorage.setItem("puzzlemaster_device_id", deviceId);
 
-
-        /*
-         * Keep the returned ID locally so the
-         * frontend can reuse it.
-         */
-
-        localStorage.setItem(
-            "puzzlemaster_device_id",
-            deviceId
-        );
-
-
-        deviceStatus.className =
-            "device-status";
-
-        deviceStatus.textContent =
-            "✅ Device connected";
-
+        deviceStatus.className = "device-status";
+        deviceStatus.textContent = "✅ Device connected";
 
     } catch (error) {
+        console.error("Device initialization failed:", error);
 
-        console.error(
-            "Device initialization failed:",
-            error
-        );
-
-
-        /*
-         * Try previously returned ID.
-         */
-
-        const savedDeviceId =
-            localStorage.getItem(
-                "puzzlemaster_device_id"
-            );
-
+        const savedDeviceId = localStorage.getItem("puzzlemaster_device_id");
 
         if (savedDeviceId) {
-
-            deviceId =
-                savedDeviceId;
-
-            deviceStatus.className =
-                "device-status";
-
-            deviceStatus.textContent =
-                "✅ Device recognized";
-
+            deviceId = savedDeviceId;
+            deviceStatus.className = "device-status";
+            deviceStatus.textContent = "✅ Device recognized";
             return;
-
         }
 
-
-        deviceStatus.className =
-            "device-status error";
-
-        deviceStatus.textContent =
-            "❌ Server connection unavailable";
-
+        deviceStatus.className = "device-status error";
+        deviceStatus.textContent = "❌ Server connection unavailable";
     }
-
 }
+
 
 
 /* =========================================================
