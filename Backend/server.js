@@ -9,23 +9,25 @@ const cookieParser = require("cookie-parser");
 const crypto = require("crypto");
 const path = require("path");
 
-const {
-    createClient
-} = require("@supabase/supabase-js");
+const { createClient } = require("@supabase/supabase-js");
 
 
 /* =========================================================
    CONFIGURATION
 ========================================================= */
 
-const PORT =
-    process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
-const SUPABASE_URL =
-    process.env.SUPABASE_URL;
+const SUPABASE_URL = process.env.SUPABASE_URL;
 
 const SUPABASE_SERVICE_ROLE_KEY =
     process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+const NODE_ENV =
+    process.env.NODE_ENV || "development";
+
+const IS_PRODUCTION =
+    NODE_ENV === "production";
 
 
 /* =========================================================
@@ -33,18 +35,16 @@ const SUPABASE_SERVICE_ROLE_KEY =
 ========================================================= */
 
 if (!SUPABASE_URL) {
-
     console.error(
-        "❌ Missing SUPABASE_URL in .env"
+        "❌ Missing SUPABASE_URL environment variable."
     );
 
     process.exit(1);
 }
 
 if (!SUPABASE_SERVICE_ROLE_KEY) {
-
     console.error(
-        "❌ Missing SUPABASE_SERVICE_ROLE_KEY in .env"
+        "❌ Missing SUPABASE_SERVICE_ROLE_KEY environment variable."
     );
 
     process.exit(1);
@@ -55,37 +55,161 @@ if (!SUPABASE_SERVICE_ROLE_KEY) {
    SUPABASE
 ========================================================= */
 
-const supabase =
-    createClient(
-        SUPABASE_URL,
-        SUPABASE_SERVICE_ROLE_KEY,
-        {
-            auth: {
-                autoRefreshToken: false,
-                persistSession: false
-            }
+const supabase = createClient(
+    SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY,
+    {
+        auth: {
+            autoRefreshToken: false,
+            persistSession: false
         }
-    );
+    }
+);
 
 
 /* =========================================================
    EXPRESS
 ========================================================= */
 
-const app =
-    express();
+const app = express();
+
+
+/*
+ * Render runs behind a reverse proxy.
+ *
+ * This allows Express to correctly understand
+ * forwarded HTTPS requests and client IP addresses.
+ */
+app.set("trust proxy", 1);
 
 
 /* =========================================================
-   MIDDLEWARE
+   CORS
 ========================================================= */
+
+/*
+ * Allowed frontend origins:
+ *
+ * Local:
+ * - http://localhost:5173
+ * - http://localhost:3000
+ *
+ * Vercel:
+ * - https://anything.vercel.app
+ *
+ * You can also add your custom production domain below
+ * if you have one.
+ */
+
+const allowedOrigins = [
+    "http://localhost:5173",
+    "http://localhost:3000"
+];
+
+
+function isAllowedOrigin(origin) {
+
+    /*
+     * Some requests, such as server-to-server requests,
+     * may not contain an Origin header.
+     */
+    if (!origin) {
+        return true;
+    }
+
+
+    /*
+     * Exact local origins.
+     */
+    if (allowedOrigins.includes(origin)) {
+        return true;
+    }
+
+
+    /*
+     * Allow Vercel deployment URLs.
+     *
+     * Example:
+     * https://puzzlemaster.vercel.app
+     */
+    try {
+
+        const url = new URL(origin);
+
+        if (
+            url.protocol === "https:" &&
+            (
+                url.hostname === "vercel.app" ||
+                url.hostname.endsWith(".vercel.app")
+            )
+        ) {
+            return true;
+        }
+
+    } catch (error) {
+
+        return false;
+    }
+
+
+    /*
+     * If you have a custom frontend domain,
+     * add it here.
+     *
+     * Example:
+     *
+     * if (origin === "https://www.example.com") {
+     *     return true;
+     * }
+     */
+
+    return false;
+}
+
 
 app.use(
     cors({
-        origin: true,
-        credentials: true
+        origin: function (origin, callback) {
+
+            if (isAllowedOrigin(origin)) {
+
+                callback(null, true);
+
+            } else {
+
+                console.warn(
+                    `🚫 CORS blocked origin: ${origin}`
+                );
+
+                callback(
+                    new Error(
+                        "Not allowed by CORS."
+                    )
+                );
+            }
+        },
+
+        credentials: true,
+
+        methods: [
+            "GET",
+            "POST",
+            "PATCH",
+            "DELETE",
+            "OPTIONS"
+        ],
+
+        allowedHeaders: [
+            "Content-Type",
+            "Authorization"
+        ]
     })
 );
+
+
+/* =========================================================
+   BODY PARSING
+========================================================= */
 
 app.use(
     express.json({
@@ -107,40 +231,41 @@ app.use(
 
 /* =========================================================
    MULTER
-   Keep uploaded images in memory temporarily.
-   They will immediately be uploaded to Supabase Storage.
 ========================================================= */
 
-const upload =
-    multer({
-        storage: multer.memoryStorage(),
+/*
+ * Uploaded images are kept temporarily in memory.
+ *
+ * They are immediately uploaded to Supabase Storage.
+ */
 
-        limits: {
-            fileSize: 10 * 1024 * 1024
-        },
+const upload = multer({
 
-        fileFilter:
-            (req, file, cb) => {
+    storage: multer.memoryStorage(),
 
-                if (
-                    file.mimetype &&
-                    file.mimetype.startsWith(
-                        "image/"
-                    )
-                ) {
+    limits: {
+        fileSize: 10 * 1024 * 1024
+    },
 
-                    cb(null, true);
+    fileFilter: function (req, file, cb) {
 
-                } else {
+        if (
+            file.mimetype &&
+            file.mimetype.startsWith("image/")
+        ) {
 
-                    cb(
-                        new Error(
-                            "Only image files are allowed."
-                        )
-                    );
-                }
-            }
-    });
+            cb(null, true);
+
+        } else {
+
+            cb(
+                new Error(
+                    "Only image files are allowed."
+                )
+            );
+        }
+    }
+});
 
 
 /* =========================================================
@@ -169,17 +294,32 @@ function generateDeviceId() {
 
 
 /*
+ * UUID validation.
+ */
+function isValidUUID(value) {
+
+    if (
+        typeof value !== "string"
+    ) {
+        return false;
+    }
+
+    const uuidPattern =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+    return uuidPattern.test(value);
+}
+
+
+/*
  * Generate a random storage filename.
  */
-function generateStorageName(
-    originalName
-) {
+function generateStorageName(originalName) {
 
     const extension =
         path.extname(
             originalName || ""
-        ).toLowerCase() ||
-        ".jpg";
+        ).toLowerCase() || ".jpg";
 
     return (
         Date.now() +
@@ -201,7 +341,6 @@ function cleanString(
     if (
         typeof value !== "string"
     ) {
-
         return "";
     }
 
@@ -212,12 +351,35 @@ function cleanString(
 
 
 /*
- * Get device ID from:
+ * Get client IP.
+ */
+function getClientIp(req) {
+
+    const forwardedFor =
+        req.headers["x-forwarded-for"];
+
+    if (forwardedFor) {
+
+        return forwardedFor
+            .split(",")[0]
+            .trim();
+    }
+
+    return (
+        req.socket.remoteAddress ||
+        null
+    );
+}
+
+
+/*
+ * Get or create device ID.
  *
- * 1. Cookie
- * 2. Request body
+ * Priority:
  *
- * If neither exists, create one.
+ * 1. Existing cookie
+ * 2. Request body deviceId
+ * 3. New UUID
  */
 function getOrCreateDeviceId(
     req,
@@ -226,12 +388,14 @@ function getOrCreateDeviceId(
 
     let deviceId =
         cleanString(
-            req.cookies?.[
-                DEVICE_COOKIE
-            ],
+            req.cookies?.[DEVICE_COOKIE],
             100
         );
 
+
+    /*
+     * Only use body deviceId if no cookie exists.
+     */
     if (!deviceId) {
 
         deviceId =
@@ -241,16 +405,12 @@ function getOrCreateDeviceId(
             );
     }
 
-    /*
-     * Validate UUID.
-     */
-    const uuidPattern =
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+    /*
+     * If invalid, create a new UUID.
+     */
     if (
-        !uuidPattern.test(
-            deviceId
-        )
+        !isValidUUID(deviceId)
     ) {
 
         deviceId =
@@ -259,20 +419,30 @@ function getOrCreateDeviceId(
 
 
     /*
-     * Store device ID in an HTTP-only cookie.
+     * IMPORTANT:
      *
-     * This means the browser automatically sends
-     * it on future requests.
+     * Vercel frontend + Render backend are cross-site.
+     *
+     * Therefore production cookies use:
+     *
+     * SameSite=None
+     * Secure=true
+     *
+     * Local development uses Lax.
      */
     res.cookie(
         DEVICE_COOKIE,
         deviceId,
         {
             httpOnly: true,
-            sameSite: "lax",
+
+            sameSite:
+                IS_PRODUCTION
+                    ? "none"
+                    : "lax",
+
             secure:
-                process.env.NODE_ENV ===
-                "production",
+                IS_PRODUCTION,
 
             maxAge:
                 1000 *
@@ -280,11 +450,42 @@ function getOrCreateDeviceId(
                 60 *
                 24 *
                 365 *
-                5
+                5,
+
+            path: "/"
         }
     );
 
+
     return deviceId;
+}
+
+
+/*
+ * Verify that a device exists.
+ */
+async function deviceExists(
+    deviceId
+) {
+
+    const {
+        data,
+        error
+    } = await supabase
+        .from("devices")
+        .select("device_id")
+        .eq(
+            "device_id",
+            deviceId
+        )
+        .maybeSingle();
+
+    if (error) {
+
+        throw error;
+    }
+
+    return Boolean(data);
 }
 
 
@@ -296,10 +497,16 @@ app.get(
     "/api/health",
     (req, res) => {
 
-        res.json({
+        return res.json({
+
             success: true,
+
             message:
                 "PuzzleMaster backend is running.",
+
+            environment:
+                NODE_ENV,
+
             timestamp:
                 new Date().toISOString()
         });
@@ -311,15 +518,6 @@ app.get(
    DEVICE INITIALIZATION
 ========================================================= */
 
-/*
- * IMPORTANT:
- *
- * This is the endpoint your frontend should call:
- *
- * POST /api/device
- *
- * It fixes the 405 issue when the frontend uses POST.
- */
 app.post(
     "/api/device",
     async (req, res) => {
@@ -378,7 +576,8 @@ app.post(
 
                     existing: true,
 
-                    device: existingDevice
+                    device:
+                        existingDevice
                 });
             }
 
@@ -387,20 +586,11 @@ app.post(
              * New device.
              */
             const ipAddress =
-                req.headers[
-                    "x-forwarded-for"
-                ]
-                ?.split(",")[0]
-                ?.trim() ||
-                req.socket.remoteAddress ||
-                null;
-
+                getClientIp(req);
 
             const userAgent =
                 cleanString(
-                    req.headers[
-                        "user-agent"
-                    ],
+                    req.headers["user-agent"],
                     500
                 );
 
@@ -450,7 +640,8 @@ app.post(
 
                 existing: false,
 
-                device: newDevice
+                device:
+                    newDevice
             });
 
         } catch (error) {
@@ -473,15 +664,9 @@ app.post(
 
 
 /* =========================================================
-   OPTIONAL GET DEVICE ENDPOINT
+   GET DEVICE
 ========================================================= */
 
-/*
- * This is also provided intentionally.
- *
- * If your frontend accidentally uses GET instead of POST,
- * it won't produce a 405.
- */
 app.get(
     "/api/device",
     async (req, res) => {
@@ -526,6 +711,9 @@ app.get(
             }
 
 
+            /*
+             * Existing device.
+             */
             if (data) {
 
                 return res.json({
@@ -539,21 +727,15 @@ app.get(
             }
 
 
+            /*
+             * Create device if it does not exist.
+             */
             const ipAddress =
-                req.headers[
-                    "x-forwarded-for"
-                ]
-                ?.split(",")[0]
-                ?.trim() ||
-                req.socket.remoteAddress ||
-                null;
-
+                getClientIp(req);
 
             const userAgent =
                 cleanString(
-                    req.headers[
-                        "user-agent"
-                    ],
+                    req.headers["user-agent"],
                     500
                 );
 
@@ -603,7 +785,8 @@ app.get(
 
                 existing: false,
 
-                device: newDevice
+                device:
+                    newDevice
             });
 
         } catch (error) {
@@ -675,9 +858,7 @@ app.post(
 
 
             if (
-                !Number.isInteger(
-                    maxMoves
-                ) ||
+                !Number.isInteger(maxMoves) ||
                 maxMoves <= 0
             ) {
 
@@ -694,37 +875,13 @@ app.post(
             /*
              * Make sure device exists.
              */
-            const {
-                data: device,
-                error: deviceError
-            } =
-                await supabase
-                    .from("devices")
-                    .select("device_id")
-                    .eq(
-                        "device_id",
-                        deviceId
-                    )
-                    .maybeSingle();
-
-
-            if (deviceError) {
-
-                console.error(
-                    deviceError
+            const exists =
+                await deviceExists(
+                    deviceId
                 );
 
-                return res.status(500).json({
 
-                    success: false,
-
-                    error:
-                        "Could not verify device."
-                });
-            }
-
-
-            if (!device) {
+            if (!exists) {
 
                 return res.status(400).json({
 
@@ -836,12 +993,78 @@ app.patch(
             }
 
 
+            /*
+             * Identify current device.
+             */
+            const deviceId =
+                getOrCreateDeviceId(
+                    req,
+                    res
+                );
+
+
+            /*
+             * Verify the game belongs to this device.
+             *
+             * This prevents one device from updating
+             * another device's game if the game ID is known.
+             */
+            const {
+                data: existingGame,
+                error: findGameError
+            } =
+                await supabase
+                    .from("game_sessions")
+                    .select("*")
+                    .eq(
+                        "id",
+                        gameId
+                    )
+                    .eq(
+                        "device_id",
+                        deviceId
+                    )
+                    .maybeSingle();
+
+
+            if (findGameError) {
+
+                console.error(
+                    "Game ownership lookup error:",
+                    findGameError
+                );
+
+                return res.status(500).json({
+
+                    success: false,
+
+                    error:
+                        "Failed to verify game."
+                });
+            }
+
+
+            if (!existingGame) {
+
+                return res.status(404).json({
+
+                    success: false,
+
+                    error:
+                        "Game not found for this device."
+                });
+            }
+
+
             const updates = {};
 
 
+            /* -----------------------------------------
+               MOVES
+            ----------------------------------------- */
+
             if (
-                req.body.moves !==
-                undefined
+                req.body.moves !== undefined
             ) {
 
                 const moves =
@@ -850,9 +1073,7 @@ app.patch(
                     );
 
                 if (
-                    !Number.isInteger(
-                        moves
-                    ) ||
+                    !Number.isInteger(moves) ||
                     moves < 0
                 ) {
 
@@ -870,9 +1091,12 @@ app.patch(
             }
 
 
+            /* -----------------------------------------
+               MAX MOVES
+            ----------------------------------------- */
+
             if (
-                req.body.maxMoves !==
-                undefined
+                req.body.maxMoves !== undefined
             ) {
 
                 const maxMoves =
@@ -881,9 +1105,7 @@ app.patch(
                     );
 
                 if (
-                    !Number.isInteger(
-                        maxMoves
-                    ) ||
+                    !Number.isInteger(maxMoves) ||
                     maxMoves <= 0
                 ) {
 
@@ -901,9 +1123,12 @@ app.patch(
             }
 
 
+            /* -----------------------------------------
+               TIME
+            ----------------------------------------- */
+
             if (
-                req.body.time !==
-                undefined
+                req.body.time !== undefined
             ) {
 
                 const time =
@@ -912,9 +1137,7 @@ app.patch(
                     );
 
                 if (
-                    !Number.isFinite(
-                        time
-                    ) ||
+                    !Number.isFinite(time) ||
                     time < 0
                 ) {
 
@@ -932,9 +1155,12 @@ app.patch(
             }
 
 
+            /* -----------------------------------------
+               SCORE
+            ----------------------------------------- */
+
             if (
-                req.body.score !==
-                undefined
+                req.body.score !== undefined
             ) {
 
                 const score =
@@ -943,9 +1169,7 @@ app.patch(
                     );
 
                 if (
-                    !Number.isFinite(
-                        score
-                    )
+                    !Number.isFinite(score)
                 ) {
 
                     return res.status(400).json({
@@ -962,9 +1186,12 @@ app.patch(
             }
 
 
+            /* -----------------------------------------
+               STATUS
+            ----------------------------------------- */
+
             if (
-                req.body.status !==
-                undefined
+                req.body.status !== undefined
             ) {
 
                 const allowedStatuses = [
@@ -1000,21 +1227,44 @@ app.patch(
             }
 
 
+            /* -----------------------------------------
+               MOVES USED
+            ----------------------------------------- */
+
             if (
-                req.body.movesUsed !==
-                undefined
+                req.body.movesUsed !== undefined
             ) {
 
-                updates.moves =
+                const movesUsed =
                     Number(
                         req.body.movesUsed
                     );
+
+                if (
+                    !Number.isInteger(movesUsed) ||
+                    movesUsed < 0
+                ) {
+
+                    return res.status(400).json({
+
+                        success: false,
+
+                        error:
+                            "Invalid movesUsed value."
+                    });
+                }
+
+                updates.moves =
+                    movesUsed;
             }
 
 
+            /* -----------------------------------------
+               COMPLETED
+            ----------------------------------------- */
+
             if (
-                req.body.completed ===
-                true
+                req.body.completed === true
             ) {
 
                 updates.status =
@@ -1025,9 +1275,12 @@ app.patch(
             }
 
 
+            /* -----------------------------------------
+               FAILED
+            ----------------------------------------- */
+
             if (
-                req.body.failed ===
-                true
+                req.body.failed === true
             ) {
 
                 updates.status =
@@ -1038,9 +1291,12 @@ app.patch(
             }
 
 
+            /* -----------------------------------------
+               NOTHING TO UPDATE
+            ----------------------------------------- */
+
             if (
-                Object.keys(updates).length ===
-                0
+                Object.keys(updates).length === 0
             ) {
 
                 return res.status(400).json({
@@ -1053,6 +1309,10 @@ app.patch(
             }
 
 
+            /* -----------------------------------------
+               UPDATE
+            ----------------------------------------- */
+
             const {
                 data,
                 error
@@ -1063,6 +1323,10 @@ app.patch(
                     .eq(
                         "id",
                         gameId
+                    )
+                    .eq(
+                        "device_id",
+                        deviceId
                     )
                     .select()
                     .single();
@@ -1115,91 +1379,87 @@ app.patch(
    PHOTO UPLOAD
 ========================================================= */
 
-app.post(
-    "/api/upload-photo",
-    upload.single("photo"),
+/*
+ * Main upload endpoint:
+ *
+ * POST /api/upload-photo
+ *
+ * Frontend alias:
+ *
+ * POST /api/upload
+ *
+ * Both are supported.
+ */
 
-    async (req, res) => {
+async function handlePhotoUpload(
+    req,
+    res
+) {
 
-        try {
+    try {
 
-            const deviceId =
-                getOrCreateDeviceId(
-                    req,
-                    res
-                );
-
-
-            if (!req.file) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    error:
-                        "No photo was uploaded."
-                });
-            }
-
-
-            const gameId =
-                cleanString(
-                    req.body?.gameId,
-                    100
-                );
+        const deviceId =
+            getOrCreateDeviceId(
+                req,
+                res
+            );
 
 
-            const playerName =
-                cleanString(
-                    req.body?.playerName,
-                    25
-                );
+        if (!req.file) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                error:
+                    "No photo was uploaded."
+            });
+        }
 
 
-            /*
-             * Make a unique storage path.
-             */
-            const filename =
-                generateStorageName(
-                    req.file.originalname
-                );
+        const gameId =
+            cleanString(
+                req.body?.gameId,
+                100
+            );
 
 
-            const storagePath =
-                `${deviceId}/${filename}`;
+        const playerName =
+            cleanString(
+                req.body?.playerName,
+                25
+            );
 
 
-            /*
-             * Upload to Supabase Storage.
-             */
+        /*
+         * If gameId was supplied, make sure it belongs
+         * to the current device.
+         */
+        if (gameId) {
+
             const {
-                error: uploadError
+                data: game,
+                error: gameError
             } =
                 await supabase
-                    .storage
-                    .from(
-                        PHOTO_BUCKET
+                    .from("game_sessions")
+                    .select("id")
+                    .eq(
+                        "id",
+                        gameId
                     )
-                    .upload(
-                        storagePath,
-                        req.file.buffer,
-                        {
-                            contentType:
-                                req.file.mimetype,
-
-                            cacheControl:
-                                "3600",
-
-                            upsert: false
-                        }
-                    );
+                    .eq(
+                        "device_id",
+                        deviceId
+                    )
+                    .maybeSingle();
 
 
-            if (uploadError) {
+            if (gameError) {
 
                 console.error(
-                    "Storage upload error:",
-                    uploadError
+                    "Upload game verification error:",
+                    gameError
                 );
 
                 return res.status(500).json({
@@ -1207,135 +1467,67 @@ app.post(
                     success: false,
 
                     error:
-                        "Failed to upload photo."
+                        "Failed to verify game."
                 });
             }
 
 
-            /*
-             * Create a signed URL.
-             *
-             * This works even when the bucket is private.
-             */
-            const {
-                data: signedData,
-                error: signedError
-            } =
-                await supabase
-                    .storage
-                    .from(
-                        PHOTO_BUCKET
-                    )
-                    .createSignedUrl(
-                        storagePath,
-                        60 * 60 * 24
-                    );
+            if (!game) {
 
-
-            if (signedError) {
-
-                console.error(
-                    "Signed URL error:",
-                    signedError
-                );
-
-                return res.status(500).json({
+                return res.status(404).json({
 
                     success: false,
 
                     error:
-                        "Photo uploaded, but URL generation failed."
+                        "Game not found for this device."
                 });
             }
+        }
 
 
-            /*
-             * Store photo metadata in database.
-             */
-            const {
-                data: photoRecord,
-                error: photoError
-            } =
-                await supabase
-                    .from("photos")
-                    .insert({
+        /*
+         * Generate unique storage filename.
+         */
+        const filename =
+            generateStorageName(
+                req.file.originalname
+            );
 
-                        device_id:
-                            deviceId,
 
-                        game_id:
-                            gameId || null,
+        const storagePath =
+            `${deviceId}/${filename}`;
 
-                        player_name:
-                            playerName ||
-                            null,
 
-                        storage_path:
-                            storagePath,
+        /* -----------------------------------------
+           UPLOAD TO SUPABASE STORAGE
+        ----------------------------------------- */
 
-                        original_name:
-                            req.file.originalname,
-
-                        mime_type:
+        const {
+            error: uploadError
+        } =
+            await supabase
+                .storage
+                .from(PHOTO_BUCKET)
+                .upload(
+                    storagePath,
+                    req.file.buffer,
+                    {
+                        contentType:
                             req.file.mimetype,
 
-                        file_size:
-                            req.file.size
+                        cacheControl:
+                            "3600",
 
-                    })
-                    .select()
-                    .single();
-
-
-            if (photoError) {
-
-                console.error(
-                    "Photo metadata error:",
-                    photoError
+                        upsert: false
+                    }
                 );
 
-                /*
-                 * Try to remove uploaded file
-                 * if metadata insertion fails.
-                 */
-                await supabase
-                    .storage
-                    .from(
-                        PHOTO_BUCKET
-                    )
-                    .remove([
-                        storagePath
-                    ]);
 
-
-                return res.status(500).json({
-
-                    success: false,
-
-                    error:
-                        "Photo metadata could not be saved."
-                });
-            }
-
-
-            return res.status(201).json({
-
-                success: true,
-
-                photo:
-                    photoRecord,
-
-                storagePath,
-
-                url:
-                    signedData.signedUrl
-            });
-
-        } catch (error) {
+        if (uploadError) {
 
             console.error(
-                "POST /api/upload-photo error:",
-                error
+                "Storage upload error:",
+                uploadError
             );
 
             return res.status(500).json({
@@ -1343,10 +1535,173 @@ app.post(
                 success: false,
 
                 error:
-                    "Photo upload failed."
+                    "Failed to upload photo."
             });
         }
+
+
+        /* -----------------------------------------
+           CREATE SIGNED URL
+        ----------------------------------------- */
+
+        const {
+            data: signedData,
+            error: signedError
+        } =
+            await supabase
+                .storage
+                .from(PHOTO_BUCKET)
+                .createSignedUrl(
+                    storagePath,
+                    60 * 60 * 24
+                );
+
+
+        if (signedError) {
+
+            console.error(
+                "Signed URL error:",
+                signedError
+            );
+
+
+            /*
+             * Clean up uploaded file.
+             */
+            await supabase
+                .storage
+                .from(PHOTO_BUCKET)
+                .remove([
+                    storagePath
+                ]);
+
+
+            return res.status(500).json({
+
+                success: false,
+
+                error:
+                    "Photo uploaded, but URL generation failed."
+            });
+        }
+
+
+        /* -----------------------------------------
+           STORE PHOTO METADATA
+        ----------------------------------------- */
+
+        const {
+            data: photoRecord,
+            error: photoError
+        } =
+            await supabase
+                .from("photos")
+                .insert({
+
+                    device_id:
+                        deviceId,
+
+                    game_id:
+                        gameId || null,
+
+                    player_name:
+                        playerName || null,
+
+                    storage_path:
+                        storagePath,
+
+                    original_name:
+                        req.file.originalname,
+
+                    mime_type:
+                        req.file.mimetype,
+
+                    file_size:
+                        req.file.size
+
+                })
+                .select()
+                .single();
+
+
+        if (photoError) {
+
+            console.error(
+                "Photo metadata error:",
+                photoError
+            );
+
+
+            /*
+             * Remove uploaded file if database
+             * insertion fails.
+             */
+            await supabase
+                .storage
+                .from(PHOTO_BUCKET)
+                .remove([
+                    storagePath
+                ]);
+
+
+            return res.status(500).json({
+
+                success: false,
+
+                error:
+                    "Photo metadata could not be saved."
+            });
+        }
+
+
+        return res.status(201).json({
+
+            success: true,
+
+            photo:
+                photoRecord,
+
+            storagePath,
+
+            url:
+                signedData.signedUrl
+        });
+
+    } catch (error) {
+
+        console.error(
+            "POST photo upload error:",
+            error
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            error:
+                "Photo upload failed."
+        });
     }
+}
+
+
+/*
+ * Original endpoint.
+ */
+app.post(
+    "/api/upload-photo",
+    upload.single("photo"),
+    handlePhotoUpload
+);
+
+
+/*
+ * Frontend-friendly alias.
+ */
+app.post(
+    "/api/upload",
+    upload.single("photo"),
+    handlePhotoUpload
 );
 
 
@@ -1536,6 +1891,21 @@ app.delete(
                 );
 
 
+            if (!photoId) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    error:
+                        "Photo ID is required."
+                });
+            }
+
+
+            /*
+             * Only find photos belonging to this device.
+             */
             const {
                 data: photo,
                 error: findError
@@ -1555,6 +1925,11 @@ app.delete(
 
 
             if (findError) {
+
+                console.error(
+                    "Photo lookup error:",
+                    findError
+                );
 
                 return res.status(500).json({
 
@@ -1578,17 +1953,16 @@ app.delete(
             }
 
 
-            /*
-             * Delete from Storage.
-             */
+            /* -----------------------------------------
+               DELETE FROM STORAGE
+            ----------------------------------------- */
+
             const {
                 error: storageError
             } =
                 await supabase
                     .storage
-                    .from(
-                        PHOTO_BUCKET
-                    )
+                    .from(PHOTO_BUCKET)
                     .remove([
                         photo.storage_path
                     ]);
@@ -1600,12 +1974,18 @@ app.delete(
                     "Storage deletion error:",
                     storageError
                 );
+
+                /*
+                 * We continue because metadata can
+                 * still be removed.
+                 */
             }
 
 
-            /*
-             * Delete metadata.
-             */
+            /* -----------------------------------------
+               DELETE DATABASE RECORD
+            ----------------------------------------- */
+
             const {
                 error: deleteError
             } =
@@ -1623,6 +2003,11 @@ app.delete(
 
 
             if (deleteError) {
+
+                console.error(
+                    "Photo metadata deletion error:",
+                    deleteError
+                );
 
                 return res.status(500).json({
 
@@ -1662,12 +2047,34 @@ app.delete(
 
 
 /* =========================================================
-   ERROR HANDLER FOR MULTER
+   MULTER / GLOBAL ERROR HANDLER
 ========================================================= */
 
 app.use(
     (error, req, res, next) => {
 
+        /*
+         * CORS errors.
+         */
+        if (
+            error &&
+            error.message ===
+                "Not allowed by CORS."
+        ) {
+
+            return res.status(403).json({
+
+                success: false,
+
+                error:
+                    "Origin is not allowed."
+            });
+        }
+
+
+        /*
+         * Multer errors.
+         */
         if (
             error instanceof
             multer.MulterError
@@ -1698,10 +2105,13 @@ app.use(
         }
 
 
+        /*
+         * Other errors.
+         */
         if (error) {
 
             console.error(
-                "Unhandled error:",
+                "Unhandled server error:",
                 error
             );
 
@@ -1728,7 +2138,7 @@ app.use(
 app.use(
     (req, res) => {
 
-        res.status(404).json({
+        return res.status(404).json({
 
             success: false,
 
@@ -1748,6 +2158,7 @@ app.listen(
     () => {
 
         console.log("");
+
         console.log(
             "========================================"
         );
@@ -1765,15 +2176,27 @@ app.listen(
         );
 
         console.log(
-            `🔗 http://localhost:${PORT}`
+            `🌎 Environment: ${NODE_ENV}`
         );
 
         console.log(
-            `❤️  http://localhost:${PORT}/api/health`
+            `❤️  Health: /api/health`
         );
 
         console.log(
-            `📱 POST http://localhost:${PORT}/api/device`
+            `📱 Device: POST /api/device`
+        );
+
+        console.log(
+            `🎮 Game: POST /api/game`
+        );
+
+        console.log(
+            `📸 Upload: POST /api/upload`
+        );
+
+        console.log(
+            `📸 Upload: POST /api/upload-photo`
         );
 
         console.log(
