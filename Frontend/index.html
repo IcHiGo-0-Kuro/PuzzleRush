@@ -3053,14 +3053,17 @@ async function uploadImage() {
     );
 
 
-    const response =
+        const response =
         await fetch(
             API.UPLOAD,
             {
                 method: "POST",
-                body: formData
+                body: formData,
+                // 🚀 CRITICAL FIX: Allows cross-origin connection to pass security cookies
+                credentials: "include" 
             }
         );
+
 
 
     if (!response.ok) {
