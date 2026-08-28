@@ -2610,7 +2610,7 @@ chooseImageBtn.addEventListener(
 
 imageInput.addEventListener(
     "change",
-    () => {
+    async () => { // 1. Added 'async' to allow backend network requests
 
         const file =
             imageInput.files[0];
@@ -2685,12 +2685,49 @@ imageInput.addEventListener(
             "block";
 
 
-        showToast(
-            "✅ Image selected!"
-        );
+        // =========================================================
+        // 🚀 NEW LOGIC: UPLOAD THE IMAGE TO RENDER / SUPABASE IMEDIATELY
+        // =========================================================
+        showToast("⏳ Uploading image to server...");
 
+        const formData = new FormData();
+        formData.append("image", selectedImageFile); // 'image' matches Multer backend keyword exactly
+
+        try {
+            const response = await fetch(API.UPLOAD, {
+                method: "POST",
+                body: formData,
+                credentials: "include" // Allows cross-origin cookies to work securely
+                // ⚠️ NOTE: No 'Content-Type' header here. Browser must handle it automatically!
+            });
+
+            if (!response.ok) {
+                throw new Error(`Upload failed with status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Save the paths returned by your Supabase backend
+                uploadedImagePath = data.path; 
+                uploadedImageURL = data.url; 
+                showToast("✅ Image uploaded successfully!");
+            } else {
+                throw new Error(data.error || "Server upload rejected.");
+            }
+
+        } catch (error) {
+            console.error("Image upload failed:", error);
+            showToast("❌ Image upload failed.");
+            
+            // Reset preview if upload failed
+            imagePreview.style.display = "none";
+            selectedImageFile = null;
+            imageInput.value = "";
+        }
     }
 );
+
 
 
 /* =========================================================
