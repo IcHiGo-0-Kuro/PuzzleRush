@@ -2610,95 +2610,54 @@ chooseImageBtn.addEventListener(
 
 imageInput.addEventListener(
     "change",
-    async () => { // 1. Added 'async' to allow backend network requests
+    async () => {
 
-        const file =
-            imageInput.files[0];
+        const file = imageInput.files[0]; // 👈 FIXED: Put the [0] back so it reads the file correctly
 
         if (!file) {
             return;
         }
 
-
-        if (
-            !file.type.startsWith(
-                "image/"
-            )
-        ) {
-
-            showToast(
-                "❌ Please choose a valid image."
-            );
-
+        if (!file.type.startsWith("image/")) {
+            showToast("❌ Please choose a valid image.");
             imageInput.value = "";
-
             return;
         }
-
 
         /*
-         * Maximum frontend file size:
-         * 10 MB.
+         * Maximum frontend file size: 10 MB.
          */
+        const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-        const MAX_FILE_SIZE =
-            10 * 1024 * 1024;
-
-        if (
-            file.size >
-            MAX_FILE_SIZE
-        ) {
-
-            showToast(
-                "❌ Image must be smaller than 10 MB."
-            );
-
+        if (file.size > MAX_FILE_SIZE) {
+            showToast("❌ Image must be smaller than 10 MB.");
             imageInput.value = "";
-
             return;
         }
 
-
-        selectedImageFile =
-            file;
-
+        selectedImageFile = file;
 
         if (imageURL) {
-
-            URL.revokeObjectURL(
-                imageURL
-            );
-
+            URL.revokeObjectURL(imageURL);
         }
 
+        imageURL = URL.createObjectURL(file);
+        imagePreview.src = imageURL;
+        imagePreview.style.display = "block";
 
-        imageURL =
-            URL.createObjectURL(
-                file
-            );
-
-
-        imagePreview.src =
-            imageURL;
-
-        imagePreview.style.display =
-            "block";
-
-
-        // =========================================================
-        // 🚀 NEW LOGIC: UPLOAD THE IMAGE TO RENDER / SUPABASE IMEDIATELY
-        // =========================================================
         showToast("⏳ Uploading image to server...");
 
+        // =========================================================
+        // NETWORK UPLOAD TO RENDER BACKEND
+        // =========================================================
         const formData = new FormData();
-        formData.append("image", selectedImageFile); // 'image' matches Multer backend keyword exactly
+        formData.append("image", selectedImageFile); 
 
         try {
             const response = await fetch(API.UPLOAD, {
                 method: "POST",
                 body: formData,
-                credentials: "include" // Allows cross-origin cookies to work securely
-                // ⚠️ NOTE: No 'Content-Type' header here. Browser must handle it automatically!
+                credentials: "include" 
             });
 
             if (!response.ok) {
@@ -2708,7 +2667,6 @@ imageInput.addEventListener(
             const data = await response.json();
 
             if (data.success) {
-                // Save the paths returned by your Supabase backend
                 uploadedImagePath = data.path; 
                 uploadedImageURL = data.url; 
                 showToast("✅ Image uploaded successfully!");
@@ -2719,14 +2677,10 @@ imageInput.addEventListener(
         } catch (error) {
             console.error("Image upload failed:", error);
             showToast("❌ Image upload failed.");
-            
-            // Reset preview if upload failed
-            imagePreview.style.display = "none";
-            selectedImageFile = null;
-            imageInput.value = "";
         }
     }
 );
+
 
 
 
