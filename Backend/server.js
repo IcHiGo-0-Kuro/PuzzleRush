@@ -264,7 +264,7 @@ const DEVICE_COOKIE =
     "puzzlemaster_device_id";
 
 const PHOTO_BUCKET =
-    "puzzlemaster-photos";
+    "puzzle-images";
 
 
 /* =========================================================
